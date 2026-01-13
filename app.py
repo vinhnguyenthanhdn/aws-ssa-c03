@@ -1,13 +1,41 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import random
 from pathlib import Path
 from quiz_parser import parse_markdown_file
 
-st.set_page_config(page_title="SAA-C03 Prep", page_icon="☁️", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="SAA-C03 Prep", page_icon="☁️", layout="wide", initial_sidebar_state="collapsed")
 
 # Load CSS
 with open(Path(__file__).parent / "style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+# Hide Streamlit viewer badge (works on Streamlit Cloud)
+components.html(
+    """
+    <script>
+        const hideStreamlitBadge = () => {
+            const parentDoc = window.parent.document;
+            const selectors = [
+                '._viewerBadge_nim44_23',
+                '[class*="viewerBadge"]',
+                '[class*="profileContainer"]',
+                'a[href*="streamlit.io/cloud"]'
+            ];
+            selectors.forEach(selector => {
+                const elements = parentDoc.querySelectorAll(selector);
+                elements.forEach(el => el.style.display = 'none');
+            });
+        };
+        hideStreamlitBadge();
+        // Run again after a short delay to catch any late-loading elements
+        setTimeout(hideStreamlitBadge, 1000);
+        setTimeout(hideStreamlitBadge, 3000);
+    </script>
+    """,
+    height=0,
+    width=0,
+)
 
 def load_data():
     """Handles file loading logic."""
