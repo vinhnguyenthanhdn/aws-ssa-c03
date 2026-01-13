@@ -209,13 +209,12 @@ def main():
     
     # UI Render
     st.markdown(f"""
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-
-                <span style="font-size: 1.5rem; font-weight: 700; color: #232f3e;">Question #{idx_ptr+1}</span>
-            </div>
-            <span style="font-size: 0.875rem; color: #64748b; font-weight: 500;">{idx_ptr+1} of {len(indices)}</span>
-        </div>
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.5rem; font-weight: 700; color: #232f3e;">Question #{idx_ptr+1}</span>
+    </div>
+    <span style="font-size: 0.875rem; color: #64748b; font-weight: 500;">{idx_ptr+1} of {len(indices)}</span>
+</div>
     """, unsafe_allow_html=True)
     
     with st.container():
