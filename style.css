@@ -110,16 +110,26 @@ div.stButton>button:active {
 
 /* Primary action buttons (Submit) */
 div.stButton>button[kind="primary"],
-form[data-testid="stForm"] div.stButton>button {
+form[data-testid="stForm"] div.stButton>button,
+button[data-testid="stBaseButton-secondaryFormSubmit"],
+button[data-testid="baseButton-secondaryFormSubmit"],
+button[data-testid="stFormSubmitButton"],
+[data-testid="stForm"] button,
+.stFormSubmitButton>button {
     background-color: #3b82f6 !important;
     color: #ffffff !important;
     border-color: #3b82f6 !important;
 }
 
 div.stButton>button[kind="primary"]:hover,
-form[data-testid="stForm"] div.stButton>button:hover {
+form[data-testid="stForm"] div.stButton>button:hover,
+button[data-testid="stBaseButton-secondaryFormSubmit"]:hover,
+button[data-testid="baseButton-secondaryFormSubmit"]:hover,
+[data-testid="stForm"] button:hover,
+.stFormSubmitButton>button:hover {
     background-color: #2563eb !important;
     border-color: #2563eb !important;
+    color: #ffffff !important;
 }
 
 .highlight-answer {
