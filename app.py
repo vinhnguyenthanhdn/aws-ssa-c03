@@ -11,31 +11,54 @@ with open(Path(__file__).parent / "style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # Hide Streamlit viewer badge (works on Streamlit Cloud)
-components.html(
-    """
+# Hide Streamlit viewer badge (JS injection via markdown for better context access)
+st.markdown("""
     <script>
-        const hideStreamlitBadge = () => {
-            const parentDoc = window.parent.document;
-            const selectors = [
-                '._viewerBadge_nim44_23',
-                '[class*="viewerBadge"]',
-                '[class*="profileContainer"]',
-                'a[href*="streamlit.io/cloud"]'
-            ];
-            selectors.forEach(selector => {
-                const elements = parentDoc.querySelectorAll(selector);
+        var observer = new MutationObserver(function(mutations) {
+            var parentDoc = window.parent.document;
+            if (parentDoc) {
+                var newStyle = parentDoc.createElement("style");
+                newStyle.innerHTML = `
+                    ._viewerBadge_nim44_23, 
+                    ._container_gzau3_1._viewerBadge_nim44_23, 
+                    [class*="viewerBadge"], 
+                    header[data-testid="stHeader"],
+                    .stDeployButton,
+                    [data-testid="stToolbar"] {
+                        display: none !important;
+                        visibility: hidden !important;
+                    }
+                `;
+                parentDoc.head.appendChild(newStyle);
+            }
+        });
+        observer.observe(window.parent.document.body, { childList: true, subtree: true });
+        
+        // Initial run
+        try {
+            var parentDoc = window.parent.document;
+            if (parentDoc) {
+                var elements = parentDoc.querySelectorAll('._viewerBadge_nim44_23, [class*="viewerBadge"], [data-testid="stToolbar"]');
                 elements.forEach(el => el.style.display = 'none');
-            });
-        };
-        hideStreamlitBadge();
-        // Run again after a short delay to catch any late-loading elements
-        setTimeout(hideStreamlitBadge, 1000);
-        setTimeout(hideStreamlitBadge, 3000);
+                
+                // Inject style tag into parent for persistence
+                var style = parentDoc.createElement('style');
+                style.innerHTML = `
+                    ._viewerBadge_nim44_23,
+                    ._container_gzau3_1._viewerBadge_nim44_23,
+                    [class*="viewerBadge"],
+                    .stDeployButton,
+                    [data-testid="stToolbar"] {
+                        display: none !important;
+                    }
+                `;
+                parentDoc.head.appendChild(style);
+            }
+        } catch (e) {
+            console.log("Could not access parent document to hide Streamlit branding: " + e);
+        }
     </script>
-    """,
-    height=0,
-    width=0,
-)
+""", unsafe_allow_html=True)
 
 def load_data():
     """Handles file loading logic."""
