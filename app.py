@@ -237,9 +237,9 @@ def main():
             
             f1, f2 = st.columns([1, 1])
             with f1:
-                sub = st.form_submit_button("✓ Submit Answer", type="primary", use_container_width=True)
-            with f2:
                 theory_req = st.form_submit_button("📖 Lý Thuyết Basics", use_container_width=True)
+            with f2:
+                sub = st.form_submit_button("✓ Submit Answer", type="primary", use_container_width=True)
             
         ans = st.session_state.user_answers.get(q['id'])
         
