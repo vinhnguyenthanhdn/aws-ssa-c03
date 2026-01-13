@@ -106,10 +106,7 @@ def main():
             st.session_state.user_answers = {}
             st.rerun()
             
-        if st.button("Jump to Q#"):
-            q_jump = st.number_input("Q#", 1, total, 1) # This UI flow is a bit odd in streamlined version, keeping simple
-            st.session_state.current_index = q_jump - 1
-            st.rerun()
+
 
     # Main Logic
     indices = st.session_state.question_order
@@ -127,6 +124,21 @@ def main():
         idx_ptr = st.session_state.current_index
         real_idx = indices[idx_ptr]
 
+    # Sidebar Navigation Input
+    with st.sidebar:
+        st.write("---")
+        with st.form("jump_form"):
+            jc1, jc2 = st.columns([2, 1])
+            with jc1:
+                jump_val = st.number_input("Jump to", min_value=1, max_value=len(indices), value=idx_ptr+1, label_visibility="collapsed")
+            with jc2:
+                if st.form_submit_button("Go"):
+                    if is_search:
+                         st.session_state.search_idx = jump_val - 1
+                    else:
+                         st.session_state.current_index = jump_val - 1
+                    st.rerun()
+
     q = questions[real_idx]
     
     # UI Render
@@ -134,8 +146,7 @@ def main():
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <span class="question-number">{idx_ptr+1}</span>
-                <span style="font-size: 1.5rem; font-weight: 700; color: #232f3e;">Question #{q['id']}</span>
-                <span class="meta-tag topic-tag">📚 Topic {q['topic']}</span>
+                <span style="font-size: 1.5rem; font-weight: 700; color: #232f3e;">Question #{idx_ptr+1}</span>
             </div>
             <span style="font-size: 0.875rem; color: #64748b; font-weight: 500;">{idx_ptr+1} of {len(indices)}</span>
         </div>
