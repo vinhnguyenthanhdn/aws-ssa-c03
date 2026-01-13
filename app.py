@@ -39,6 +39,27 @@ def get_ai_explanation(question, options, correct_answer):
     except Exception as e:
         return f"⚠ Không thể tải phân tích từ AI. Lỗi: {str(e)}"
 
+def get_ai_theory(question, options):
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        prompt = f"""
+        Bạn là từ điển sống về AWS. Hãy giải thích ngắn gọn các **Dịch vụ** hoặc **Khái niệm** AWS xuất hiện trong văn bản sau:
+
+        **Ngữ cảnh (Câu hỏi & Đáp án):**
+        {question}
+        {options}
+
+        **Yêu cầu Output:**
+        - Chỉ tập trung vào CÁC KHÁI NIỆM/DỊCH VỤ (VD: AWS Lambda, IOPS, Consistency Model...).
+        - Với mỗi khái niệm: Đưa ra định nghĩa 1 dòng và Use Case chính 1 dòng.
+        - Không giải thích câu hỏi, không phân tích đúng sai.
+        - Trình bày dạng danh sách Markdown sạch sẽ.
+        """
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"⚠ Lỗi tải lý thuyết: {str(e)}"
+
 st.set_page_config(page_title="SAA-C03 Prep", page_icon="☁️", layout="wide", initial_sidebar_state="collapsed")
 
 # Load CSS
@@ -190,13 +211,33 @@ def main():
                 sel = st.radio("Select your answer:", q['options'], index=None, label_visibility="collapsed")
                 if sel: user_ch.append(sel.split('.')[0])
             
-            sub = st.form_submit_button("✓ Submit Answer")
+                if sel: user_ch.append(sel.split('.')[0])
+            
+            f1, f2 = st.columns([1, 1])
+            with f1:
+                sub = st.form_submit_button("✓ Submit Answer", type="primary", use_container_width=True)
+            with f2:
+                theory_req = st.form_submit_button("📖 Lý Thuyết Basics", use_container_width=True)
             
         ans = st.session_state.user_answers.get(q['id'])
+        
+        # Init storage
+        if "theories" not in st.session_state: st.session_state.theories = {}
+        if "explanations" not in st.session_state: st.session_state.explanations = {}
+
+        # Handle Answer Submit
         if sub and user_ch:
             ans = "".join(sorted(user_ch))
             st.session_state.user_answers[q['id']] = ans
-            
+        
+        # Handle Theory Request
+        if theory_req:
+             if q['id'] not in st.session_state.theories:
+                 with st.spinner("Đang tổng hợp kiến thức..."):
+                     opts_text = "\n".join(q['options'])
+                     st.session_state.theories[q['id']] = get_ai_theory(q['question'], opts_text)
+        
+        # Display Results & Content
         if ans:
             correct = ans == (q['correct_answer'] or "")
             if correct:
@@ -213,22 +254,21 @@ def main():
                 ''', unsafe_allow_html=True)
             
             # AI Analysis Section
-            if "explanations" not in st.session_state:
-                st.session_state.explanations = {}
-                
             with st.expander("🤖 Phân Tích (AI Teacher)", expanded=True):
                 if q['id'] not in st.session_state.explanations:
                     with st.spinner("Đang phân tích câu hỏi... (Gemini AI)"):
-                        # Format options for clearer prompt
                         opts_text = "\n".join(q['options'])
                         explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'])
                         st.session_state.explanations[q['id']] = explanation
                 
                 st.markdown(st.session_state.explanations[q['id']])
-                
-                # Keep original links if available as supplemental info
                 if q['discussion_link']: 
                     st.caption(f"[Xem thảo luận gốc trên ExamTopics]({q['discussion_link']})")
+
+        # Display Theory Section (Independent of Answer status)
+        if q['id'] in st.session_state.theories:
+            with st.expander("📖 Kiến Thức Nền (Concepts)", expanded=True):
+                st.markdown(st.session_state.theories[q['id']])
 
     # Nav
     st.divider()
