@@ -130,19 +130,25 @@ def main():
     # Initialize Local Storage
     localS = LocalStorage()
     
-    # Load state from Local Storage if session is fresh
+    # Load state from Local Storage/URL if session is fresh
     if 'data_loaded' not in st.session_state:
+        # 1. Restore Index from URL Query Params (Robust against refresh)
         try:
-            saved_idx = localS.getItem("saa_c03_current_index")
-            saved_ans = localS.getItem("saa_c03_user_answers")
-            
-            st.session_state.current_index = int(saved_idx) if saved_idx is not None else 0
-            st.session_state.user_answers = json.loads(saved_ans) if saved_ans is not None else {}
-            st.session_state.data_loaded = True
-            # Force rerun to apply loadded state related to index
-            if saved_idx is not None: st.rerun()
+            qp = st.query_params
+            q_idx = int(qp.get("q", 1)) - 1
+            st.session_state.current_index = max(0, q_idx)
         except:
-             st.session_state.data_loaded = True
+             st.session_state.current_index = 0
+             
+        # 2. Restore Answers from Local Storage
+        try:
+            saved_ans = localS.getItem("saa_c03_user_answers")
+            if saved_ans:
+                st.session_state.user_answers = json.loads(saved_ans)
+        except:
+            pass
+            
+        st.session_state.data_loaded = True
 
     # Ensure Session State Initialization
     if 'current_index' not in st.session_state: st.session_state.current_index = 0
@@ -303,7 +309,7 @@ def main():
             if is_search and st.session_state.search_idx > 0: st.session_state.search_idx -= 1; st.rerun()
             elif not is_search and st.session_state.current_index > 0: 
                 st.session_state.current_index -= 1
-                localS.setItem("saa_c03_current_index", st.session_state.current_index)
+                st.query_params["q"] = str(st.session_state.current_index + 1)
                 st.rerun()
             
     with c2:
@@ -318,7 +324,7 @@ def main():
                          st.session_state.search_idx = jump_val - 1
                     else:
                          st.session_state.current_index = jump_val - 1
-                         localS.setItem("saa_c03_current_index", st.session_state.current_index)
+                         st.query_params["q"] = str(st.session_state.current_index + 1)
                     st.rerun()
                     
     with c3:
@@ -326,7 +332,7 @@ def main():
             if is_search and st.session_state.search_idx < len(indices)-1: st.session_state.search_idx += 1; st.rerun()
             elif not is_search and st.session_state.current_index < len(questions)-1: 
                 st.session_state.current_index += 1
-                localS.setItem("saa_c03_current_index", st.session_state.current_index)
+                st.query_params["q"] = str(st.session_state.current_index + 1)
                 st.rerun()
 
 if __name__ == "__main__":
