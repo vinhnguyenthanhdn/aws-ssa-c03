@@ -1,8 +1,41 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import random
+import google.generativeai as genai
 from pathlib import Path
 from quiz_parser import parse_markdown_file
+
+# Configure Gemini
+if "GOOGLE_API_KEY" in st.secrets:
+    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+
+def get_ai_explanation(question, options, correct_answer):
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        prompt = f"""
+        Bạn là chuyên gia AWS Certified Solutions Architect (SAA-C03). 
+        Hãy phân tích câu hỏi sau bằng Tiếng Việt một cách chi tiết và dễ hiểu:
+
+        **Câu hỏi:**
+        {question}
+
+        **Các lựa chọn:**
+        {options}
+
+        **Đáp án đúng:** {correct_answer}
+
+        **Yêu cầu phân tích:**
+        1. **Tóm tắt vấn đề:** Câu hỏi đang yêu cầu gì? Từ khóa quan trọng là gì?
+        2. **Tại sao đáp án đúng là chính xác?** Giải thích dựa trên kiến thức cốt lõi của AWS.
+        3. **Tại sao các lựa chọn khác sai?** Chỉ ra điểm bất hợp lý hoặc thiếu sót của từng lựa chọn sai.
+        4. **Lời khuyên (nếu có):** Mẹo ghi nhớ cho dạng bài này.
+
+        Trình bày định dạng Markdown rõ ràng, dùng bullet points.
+        """
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"⚠ Không thể tải phân tích từ AI. Lỗi: {str(e)}"
 
 st.set_page_config(page_title="SAA-C03 Prep", page_icon="☁️", layout="wide", initial_sidebar_state="collapsed")
 
@@ -177,10 +210,23 @@ def main():
                     </div>
                 ''', unsafe_allow_html=True)
             
-            with st.expander("Discussion", expanded=True):
-                st.markdown(f"**Official:** <span class='highlight-answer'>{q['correct_answer']}</span>", unsafe_allow_html=True)
-                if q['suggested_answer_text']: st.info(q['suggested_answer_text'])
-                if q['discussion_link']: st.markdown(f"[Link]({q['discussion_link']})")
+            # AI Analysis Section
+            if "explanations" not in st.session_state:
+                st.session_state.explanations = {}
+                
+            with st.expander("🤖 Phân Tích (AI Teacher)", expanded=True):
+                if q['id'] not in st.session_state.explanations:
+                    with st.spinner("Đang phân tích câu hỏi... (Gemini AI)"):
+                        # Format options for clearer prompt
+                        opts_text = "\n".join(q['options'])
+                        explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'])
+                        st.session_state.explanations[q['id']] = explanation
+                
+                st.markdown(st.session_state.explanations[q['id']])
+                
+                # Keep original links if available as supplemental info
+                if q['discussion_link']: 
+                    st.caption(f"[Xem thảo luận gốc trên ExamTopics]({q['discussion_link']})")
 
     # Nav
     st.divider()
