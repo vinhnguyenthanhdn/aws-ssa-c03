@@ -2,76 +2,142 @@ import streamlit as st
 import re
 import random
 import os
+from pathlib import Path
 
 # Set page config
 st.set_page_config(
-    page_title="AWS SAA-C03 Quiz App",
+    page_title="Professional Prep | AWS SAA-C03",
     page_icon="☁️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for aesthetics
+# Custom CSS for "Bright & Beautiful" UI
 st.markdown("""
 <style>
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
     /* Global styles */
     .stApp {
-        background-color: #0e1117;
-        color: #fafafa;
+        background-color: #f3f4f6; /* Light gray background */
+        color: #1f2937;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Header styling */
+    h1, h2, h3 {
+        color: #111827;
+        font-weight: 700;
+        font-family: 'Inter', sans-serif;
     }
     
     /* Card-like container for the question */
     .question-card {
-        background-color: #1f2937;
-        padding: 2rem;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        background-color: #ffffff;
+        padding: 2.5rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         margin-bottom: 2rem;
-        border: 1px solid #374151;
+        border: 1px solid #e5e7eb;
     }
     
     /* Text Question Style */
     .question-text {
-        font-size: 1.25rem;
+        font-size: 1.15rem;
         font-weight: 500;
-        line-height: 1.6;
-        color: #e5e7eb;
+        line-height: 1.7;
+        color: #374151;
         margin-bottom: 1.5rem;
     }
     
-    /* Option styling handled by Streamlit widgets, but we can add spacing */
+    /* Option styling - handled by widgets but adding container spacing */
     .stRadio, .stCheckbox {
+        background-color: #ffffff;
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid #f3f4f6;
+        transition: all 0.2s;
         margin-bottom: 0.5rem;
+    }
+    
+    .stRadio:hover, .stCheckbox:hover {
+        background-color: #f9fafb;
+        border-color: #d1d5db;
     }
     
     /* Success/Error messages */
     .success-msg {
-        background-color: rgba(16, 185, 129, 0.2);
-        color: #34d399;
-        padding: 1rem;
-        border-radius: 8px;
-        border: 1px solid #059669;
+        background-color: #ecfdf5;
+        color: #047857;
+        padding: 1.25rem;
+        border-radius: 12px;
+        border: 1px solid #a7f3d0;
         margin-top: 1rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
     }
     
     .error-msg {
-        background-color: rgba(239, 68, 68, 0.2);
-        color: #f87171;
-        padding: 1rem;
-        border-radius: 8px;
-        border: 1px solid #b91c1c;
+        background-color: #fef2f2;
+        color: #b91c1c;
+        padding: 1.25rem;
+        border-radius: 12px;
+        border: 1px solid #fecaca;
         margin-top: 1rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
     }
     
     /* Sidebar customization */
     section[data-testid="stSidebar"] {
-        background-color: #111827;
+        background-color: #ffffff;
+        border-right: 1px solid #e5e7eb;
+    }
+    div[data-testid="stSidebarNav"] {
+        padding-top: 1rem;
     }
     
+    /* Button Customization */
+    div.stButton > button {
+        border-radius: 10px;
+        font-weight: 600;
+        border: none;
+        transition: transform 0.1s;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    div.stButton > button:active {
+        transform: scale(0.98);
+    }
+
     /* Highlight the Correct Answer in Explanation */
     .highlight-answer {
+        background-color: #fef3c7;
+        color: #d97706;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
         font-weight: bold;
-        color: #fbbf24;
+    }
+    
+    /* Tags for metadata */
+    .meta-tag {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-right: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .topic-tag {
+        background-color: #e0e7ff;
+        color: #4338ca;
+    }
+    .id-tag {
+        background-color: #e5e7eb;
+        color: #374151;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -136,7 +202,6 @@ def parse_markdown_file(content):
         # Metadata end is usually "[All AWS ... Questions]"
         # or checking lines.
         
-        # Split block into lines to find regions
         lines = block.split('\n')
         
         # Find where metadata ends
@@ -146,10 +211,7 @@ def parse_markdown_file(content):
                 meta_end_idx = i + 1
                 break
         
-        # Find where options start (based on index in the raw string, or just scanning lines again)
-        # Using the character index is safer if we just slice the string, but line processing is easier for "Suggested Answer" removal.
-        # Let's use lines.
-        
+        # Find where options start
         option_start_line_idx = len(lines)
         for i in range(meta_end_idx, len(lines)):
             if re.match(r'^[A-F]\.\s+', lines[i]):
@@ -168,7 +230,6 @@ def parse_markdown_file(content):
                 continue
             # Extract Suggested Answer if present
             if s_line.startswith("Suggested Answer:"):
-                # Format: Suggested Answer: C 🗳️ 
                 suggested_answer = s_line
                 continue
             if s_line.startswith("Question #") or s_line.startswith("Topic #"):
@@ -176,7 +237,6 @@ def parse_markdown_file(content):
             if s_line.startswith("Exam question from"):
                 continue
             if "Amazon's" == s_line or "AWS Certified Solutions" in s_line:
-                 # heuristic to skip header leftovers if meta_end_idx missed
                  continue
             
             clean_body.append(s_line)
@@ -199,7 +259,7 @@ def parse_markdown_file(content):
             "topic": topic_id,
             "question": question_text,
             "options": options,
-            "correct_answer": correct_answer, # e.g. "BE" or "B"
+            "correct_answer": correct_answer, 
             "suggested_answer_text": suggested_answer,
             "discussion_link": discussion_link,
             "is_multiselect": is_multiselect,
@@ -213,45 +273,34 @@ def parse_markdown_file(content):
 # -----------------------------------------------------------------------------
 
 def main():
-    st.title("☁️ AWS SAA-C03 Exam Prep")
-    
-    # Initialize Session State
-    if 'current_index' not in st.session_state:
-        st.session_state.current_index = 0
-    if 'user_answers' not in st.session_state:
-        st.session_state.user_answers = {} # Map q_id -> user_selection
-    if 'random_mode' not in st.session_state:
-        st.session_state.random_mode = False
-    if 'question_order' not in st.session_state:
-        st.session_state.question_order = []
-    
     # -----------------------------------------------------------
-    # Sidebar: Data Loading & Navigation
+    # Sidebar: Settings & Nav
     # -----------------------------------------------------------
     with st.sidebar:
-        st.header("Settings")
+        st.header("⚙️ Settings")
         
-        # File Source
-        local_file_path = "/Users/vinh/Documents/Project/aws-ssa-c03/SAA_C03.md"
+        # --- File Loading (Cloud Optimized) ---
+        default_filename = "SAA_C03.md"
+        # Look for file in the same directory as this script
+        file_path = Path(__file__).parent / default_filename
+        
         data_content = None
         
-        # Text to indicate source
-        if os.path.exists(local_file_path):
-            st.success(f"Loaded local file: SAA_C03.md")
+        if file_path.exists():
+            st.success(f"✅ Loaded: {default_filename}")
             try:
-                with open(local_file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, 'r', encoding='utf-8') as f:
                     data_content = f.read()
             except Exception as e:
                 st.error(f"Error reading file: {e}")
+        else:
+            st.warning(f"File `{default_filename}` not found locally.")
+            uploaded_file = st.file_uploader("Upload .md file", type=["md"])
+            if uploaded_file is not None:
+                data_content = uploaded_file.getvalue().decode("utf-8")
         
-        # Fallback Uploader
-        uploaded_file = st.file_uploader("Or upload .md file", type=["md"])
-        if uploaded_file is not None:
-            stringio = uploaded_file.getvalue().decode("utf-8")
-            data_content = stringio
-            
         if not data_content:
-            st.warning("Please upload a file or ensure SAA_C03.md is in the directory.")
+            st.info("System expects `SAA_C03.md` in the directory.")
             st.stop()
             
         # Parse Data
@@ -264,55 +313,68 @@ def main():
         total_questions = len(questions)
         st.markdown(f"**Total Questions:** {total_questions}")
         
-        # Init question order if needed
+        # Initialize Session State
+        if 'current_index' not in st.session_state:
+            st.session_state.current_index = 0
+        if 'user_answers' not in st.session_state:
+            st.session_state.user_answers = {} 
+        if 'question_order' not in st.session_state:
+            st.session_state.question_order = list(range(total_questions))
+        if 'random_mode' not in st.session_state:
+            st.session_state.random_mode = False
+
+        # Reset check
         if len(st.session_state.question_order) != total_questions:
              st.session_state.question_order = list(range(total_questions))
         
         st.divider()
         
-        # Tools
+        # --- Tools ---
         st.subheader("Tools")
-        
-        # Search
         search_query = st.text_input("🔍 Search Keyword")
         
-        # Navigation
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("🔀 Shuffle"):
+            if st.button("🔀 Shuffle", use_container_width=True):
                 st.session_state.random_mode = True
                 random.shuffle(st.session_state.question_order)
                 st.session_state.current_index = 0
                 st.rerun()
         with col2:
-            if st.button("🔄 Reset"):
+            if st.button("🔄 Reset", use_container_width=True):
                 st.session_state.random_mode = False
                 st.session_state.question_order = list(range(total_questions))
                 st.session_state.current_index = 0
                 st.session_state.user_answers = {}
                 st.rerun()
 
-        # Jump to Question
-        q_num = st.number_input("Jump to Q#", min_value=1, max_value=total_questions, value=1)
-        if st.button("Go"):
-            # Find index of this question number in the current order? 
-            # Or just jump to that absolute index? 
-            # Usually "Jump to Q#" implies absolute index/ID order, but strict index is easier.
-            st.session_state.current_index = q_num - 1
-            st.rerun()
+        q_num = st.number_input("Go to Question #", min_value=1, max_value=total_questions, value=1)
+        if st.button("Jump", use_container_width=True):
+             # Logic to jump to specific question index
+             # Note: This jumps to the Nth question in the CURRENT order (shuffled or not)
+             # To jump to specific ID would require lookup, but Nth is standard for "Go to page X"
+             st.session_state.current_index = q_num - 1
+             st.rerun()
 
         # Progress
         answered_count = len(st.session_state.user_answers)
-        st.write(f"**Progress:** {answered_count} / {total_questions}")
+        st.markdown(f"**Progress:** {answered_count} / {total_questions}")
         st.progress(min(answered_count / total_questions, 1.0))
 
     # -----------------------------------------------------------
-    # Filter Logic (Search)
+    # Main Content
     # -----------------------------------------------------------
+    
+    # 1. Title Section
+    st.title("☁️ AWS Solutions Architect Associate")
+    st.markdown("Master the SAA-C03 exam with this interactive practice tool.")
+    st.divider()
+
+    # 2. Filtering/Search Logic
     filtered_indices = st.session_state.question_order
+    is_search_mode = False
     
     if search_query:
-        # Filter indices based on query
         filtered_indices = [
             i for i in st.session_state.question_order 
             if search_query.lower() in questions[i]['question'].lower() 
@@ -323,15 +385,6 @@ def main():
             st.warning("No questions found matching your query.")
             st.stop()
             
-        # Adjust current index logic for filtered view
-        # We need a separate state for "filtered_view_index" effectively, 
-        # or we just reset to 0 when search changes.
-        # For simplicity, we just show the filtered list paginated by current_index logic?
-        # A simple approach: If searching, we just override the 'display index' to be local to the filtered list
-        # But `current_index` is global. Let's just reset current_index if it's out of bounds of filtered list
-        
-        # Better UX: Show "Found X results", allow navigating through them.
-        # We will use a local index for the filtered results.
         if 'search_query' not in st.session_state or st.session_state.search_query != search_query:
             st.session_state.search_query = search_query
             st.session_state.search_index = 0
@@ -353,21 +406,24 @@ def main():
         display_idx = st.session_state.current_index
         is_search_mode = False
         total_in_view = total_questions
-        # Clear search state if empty
         if 'search_query' in st.session_state:
             del st.session_state['search_query']
 
     question_data = questions[actual_index]
     
-    # -----------------------------------------------------------
-    # Main Content Area
-    # -----------------------------------------------------------
+    # 3. Question Display
+    # Metadata Badge
+    st.markdown(f"""
+    <div>
+        <span class="meta-tag id-tag">Question #{question_data['id']}</span>
+        <span class="meta-tag topic-tag">Topic {question_data['topic']}</span>
+        <span class="meta-tag" style="background-color: #f3f4f6; color: #6b7280; float: right;">
+            {display_idx + 1} / {total_in_view}
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Header: Q# and Topic
-    st.caption(f"Question {display_idx + 1} of {total_in_view} { '(Filtered)' if is_search_mode else ''}")
-    st.markdown(f"### Question #{question_data['id']} (Topic {question_data['topic']})")
-    
-    # Container for the Question
+    # Card
     with st.container():
         st.markdown(f"""
         <div class="question-card">
@@ -381,46 +437,38 @@ def main():
         with st.form(key=f"q_form_{question_data['id']}"):
             user_choice = []
             
+            # Label
+            st.markdown(f"**Select Answer ({'Multiple Choice' if question_data['is_multiselect'] else 'Single Choice'}):**")
+            
             if question_data['is_multiselect']:
-                st.write(f"**Select {question_data['expected_count']} options:**")
                 for opt in question_data['options']:
-                    # Use formatted key to persist state if needed, but form resets on rerun usually
-                    # We can pre-select if already answered
                     is_checked = st.checkbox(opt)
                     if is_checked:
-                        # Extract the letter 'A', 'B' etc
                         letter = opt.split('.')[0]
                         user_choice.append(letter)
             else:
-                # Radio button
-                # We need to map options to something selectable
-                # If previously answered, index it
                 radio_val = st.radio(
                     "Select an answer:",
                     question_data['options'],
                     index=None,
+                    label_visibility="collapsed",
                     key=f"radio_{question_data['id']}"
                 )
                 if radio_val:
                     user_choice.append(radio_val.split('.')[0])
             
-            submit_btn = st.form_submit_button("Submit Answer")
+            st.markdown("---")
+            submit_btn = st.form_submit_button("Submit Answer", type="primary")
             
-        # Logic to handle submission
+        # Feedback Section
         feedback_placeholder = st.empty()
-        
-        # Check if already answered in session state
         already_answered = st.session_state.user_answers.get(question_data['id'])
-        
         show_answer = False
         
         if submit_btn:
-             # Validate
              if not user_choice:
-                 st.warning("Please select an option.")
+                 st.warning("⚠️ Please select an option.")
              else:
-                 # Save answer
-                 # Sort list for multi-select comparison (e.g. ['A','B'] vs "AB")
                  user_choice.sort()
                  user_val = "".join(user_choice)
                  st.session_state.user_answers[question_data['id']] = user_val
@@ -428,50 +476,39 @@ def main():
         
         if already_answered:
             correct_val = question_data['correct_answer'] or ""
-            # Official answer string might be just "B" or "BC"
-            # User val is "B" or "BC"
-            
             is_correct = (already_answered == correct_val)
             
             if is_correct:
                 feedback_placeholder.markdown(f"""
                 <div class="success-msg">
-                    <strong>✅ Correct!</strong> You chose {already_answered}.
+                    ✅ Correct! Output: {already_answered}
                 </div>
                 """, unsafe_allow_html=True)
             else:
                 feedback_placeholder.markdown(f"""
                 <div class="error-msg">
-                    <strong>❌ Incorrect.</strong> You chose {already_answered}.
+                    ❌ Incorrect. Your answer: {already_answered}
                 </div>
                 """, unsafe_allow_html=True)
-                
             show_answer = True
 
-    # -----------------------------------------------------------
-    # Answer & Explanation (Bottom)
-    # -----------------------------------------------------------
+    # 4. Explanation Section (Expanded)
     if show_answer or st.session_state.user_answers.get(question_data['id']):
-        with st.expander("📝 View Official Answer & Suggested Discussion", expanded=False):
+        with st.expander("📘 View Official Answer & Discussion", expanded=True):
             st.markdown(f"#### Official Answer: <span class='highlight-answer'>{question_data['correct_answer']}</span>", unsafe_allow_html=True)
             
             if question_data['suggested_answer_text']:
-                st.info(f"**Community Vote/Suggestion:** {question_data['suggested_answer_text']}")
-                
-            if question_data['discussion_link']:
-                st.markdown(f"[🔗 Discuss on ExamTopics]({question_data['discussion_link']})")
+                 st.info(f"**Community Vote/Suggestion:** {question_data['suggested_answer_text']}")
             
-            st.write("---")
-            st.caption("Note: 'Suggested Answer' is often crowd-sourced. The 'Official Answer' is parsed from the bottom of the question block.")
+            if question_data['discussion_link']:
+                st.markdown(f"[🔗 Open Discussion on ExamTopics]({question_data['discussion_link']})")
 
-    # -----------------------------------------------------------
-    # Navigation Buttons
-    # -----------------------------------------------------------
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    col_prev, col_next = st.columns([1, 1])
+    # 5. Nav Buttons
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_prev, _, col_next = st.columns([1, 2, 1])
     
     with col_prev:
-        if st.button("⬅️ Previous Question", use_container_width=True):
+        if st.button("⬅️ Previous", use_container_width=True):
             if is_search_mode:
                 if st.session_state.search_index > 0:
                     st.session_state.search_index -= 1
@@ -482,7 +519,7 @@ def main():
                     st.rerun()
                     
     with col_next:
-        if st.button("Next Question ➡️", use_container_width=True):
+        if st.button("Next ➡️", use_container_width=True):
              if is_search_mode:
                 if st.session_state.search_index < len(filtered_indices) - 1:
                     st.session_state.search_index += 1
