@@ -94,6 +94,12 @@ header[data-testid="stHeader"] {
     min-height: 100vh;
 }
 
+/* Limit content width for readability */
+.stApp>div:nth-of-type(1)>div:nth-of-type(1) {
+    max-width: 1000px !important;
+    margin: 0 auto !important;
+}
+
 h1,
 h2,
 h3,
