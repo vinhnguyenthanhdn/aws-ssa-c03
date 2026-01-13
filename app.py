@@ -124,20 +124,7 @@ def main():
         idx_ptr = st.session_state.current_index
         real_idx = indices[idx_ptr]
 
-    # Sidebar Navigation Input
-    with st.sidebar:
-        st.write("---")
-        with st.form("jump_form"):
-            jc1, jc2 = st.columns([2, 1])
-            with jc1:
-                jump_val = st.number_input("Jump to", min_value=1, max_value=len(indices), value=idx_ptr+1, label_visibility="collapsed")
-            with jc2:
-                if st.form_submit_button("Go"):
-                    if is_search:
-                         st.session_state.search_idx = jump_val - 1
-                    else:
-                         st.session_state.current_index = jump_val - 1
-                    st.rerun()
+
 
     q = questions[real_idx]
     
@@ -196,13 +183,31 @@ def main():
                 if q['discussion_link']: st.markdown(f"[Link]({q['discussion_link']})")
 
     # Nav
-    c1, _, c2 = st.columns([1, 2, 1])
-    if c1.button("⬅️"):
-        if is_search and st.session_state.search_idx > 0: st.session_state.search_idx -= 1; st.rerun()
-        elif not is_search and st.session_state.current_index > 0: st.session_state.current_index -= 1; st.rerun()
-    if c2.button("➡️"):
-        if is_search and st.session_state.search_idx < len(indices)-1: st.session_state.search_idx += 1; st.rerun()
-        elif not is_search and st.session_state.current_index < len(questions)-1: st.session_state.current_index += 1; st.rerun()
+    st.divider()
+    c1, c2, c3 = st.columns([1, 2, 1])
+    
+    with c1:
+        if st.button("⬅️ Previous", use_container_width=True):
+            if is_search and st.session_state.search_idx > 0: st.session_state.search_idx -= 1; st.rerun()
+            elif not is_search and st.session_state.current_index > 0: st.session_state.current_index -= 1; st.rerun()
+            
+    with c2:
+        with st.form("jump_to_question"):
+            jc1, jc2 = st.columns([3, 1])
+            with jc1:
+                jump_val = st.number_input("Go to Question #", min_value=1, max_value=len(indices), value=idx_ptr+1, label_visibility="collapsed")
+            with jc2:
+                if st.form_submit_button("Go"):
+                    if is_search:
+                         st.session_state.search_idx = jump_val - 1
+                    else:
+                         st.session_state.current_index = jump_val - 1
+                    st.rerun()
+                    
+    with c3:
+        if st.button("Next ➡️", use_container_width=True):
+            if is_search and st.session_state.search_idx < len(indices)-1: st.session_state.search_idx += 1; st.rerun()
+            elif not is_search and st.session_state.current_index < len(questions)-1: st.session_state.current_index += 1; st.rerun()
 
 if __name__ == "__main__":
     main()
