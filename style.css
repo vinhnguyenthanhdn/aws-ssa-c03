@@ -763,42 +763,26 @@ section[data-testid="stSidebar"]::-webkit-scrollbar-thumb {
 .stForm [data-testid="stMarkdownContainer"] em {
     display: none !important;
 }
-
-/* Ensure clean removal of footer instructions */
-form[data-testid="stForm"]>div:last-child {
-    display: none !important;
-    /* This usually targets the instruction text */
-}
-
-/* Align Jump Form Elements & Force Height Match */
-/* Target the Go button specifically within the form */
-form[data-testid="stForm"] [data-testid="stFormSubmitButton"]>button {
-    min-height: 48px !important;
-    height: 48px !important;
-    margin-top: 0px !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    line-height: 1 !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    border-radius: var(--radius-md) !important;
-}
-
-/* Input field height force */
-form[data-testid="stForm"] [data-testid="stNumberInput"] input {
+/* Standardize Inputs and Buttons for Alignment */
+[data-testid="stNumberInput"] input {
     min-height: 48px !important;
     height: 48px !important;
     line-height: normal !important;
 }
 
-/* Remove default gap usually caused by labels/containers to ensure alignment */
-form[data-testid="stForm"] .stElementContainer {
-    margin-bottom: 0 !important;
+div.stButton > button {
+    min-height: 48px !important;
+    height: 48px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-form[data-testid="stForm"] [data-testid="column"] {
+[data-testid="column"] {
     align-items: flex-end !important;
-    /* Ensure bottom alignment */
+    vertical-align: bottom !important;
+}
+
+.stElementContainer {
+    margin-bottom: 0.5rem !important;
 }

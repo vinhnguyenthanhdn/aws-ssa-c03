@@ -41,7 +41,7 @@ def get_ai_explanation(question, options, correct_answer):
     for attempt in range(max_retries):
         try:
             configure_genai() # Ensure current key is set
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-3-flash-preview')
             prompt = f"""
             Bạn là chuyên gia AWS SAA-C03. Nhiệm vụ của bạn là phân tích câu hỏi trắc nghiệm này để giải thích cho học viên.
     
@@ -356,19 +356,24 @@ def main():
                 st.rerun()
             
     with c2:
-        with st.form("jump_to_question", clear_on_submit=False):
-            jc1, jc2 = st.columns([4, 1], gap="small")
-            with jc1:
-                jump_val = st.number_input("Go to Question #", min_value=1, max_value=len(indices), value=idx_ptr+1, label_visibility="collapsed")
-            with jc2:
-                # Use a unique key to allow styling via CSS if needed, though form scope helps
-                if st.form_submit_button("Go", use_container_width=True):
-                    if is_search:
-                         st.session_state.search_idx = jump_val - 1
-                    else:
-                         st.session_state.current_index = jump_val - 1
-                         st.query_params["q"] = str(st.session_state.current_index + 1)
-                    st.rerun()
+    with c2:
+        jc1, jc2 = st.columns([3, 1], gap="small")
+        with jc1:
+            # Direct input triggering rerun on Enter
+            new_val = st.number_input("Go to Question #", min_value=1, max_value=len(indices), value=idx_ptr+1, label_visibility="collapsed")
+            if new_val != idx_ptr+1:
+                 if is_search:
+                     st.session_state.search_idx = new_val - 1
+                 else:
+                     st.session_state.current_index = new_val - 1
+                     st.query_params["q"] = str(st.session_state.current_index + 1)
+                 st.rerun()
+                 
+        with jc2:
+            if st.button("Go", use_container_width=True):
+                # Button essentially acts as a confirm or refresh if they didn't hit enter
+                # Logic is handled by number_input update mostly, but this ensures explicit action works
+                pass
                     
     with c3:
         if st.button("Next ➡️", use_container_width=True):
