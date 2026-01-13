@@ -13,8 +13,7 @@ def get_ai_explanation(question, options, correct_answer):
     try:
         model = genai.GenerativeModel('gemini-3-flash-preview')
         prompt = f"""
-        Bạn là chuyên gia AWS Certified Solutions Architect (SAA-C03). 
-        Hãy phân tích câu hỏi sau bằng Tiếng Việt một cách chi tiết và dễ hiểu:
+        Bạn là chuyên gia AWS SAA-C03. Nhiệm vụ của bạn là phân tích câu hỏi trắc nghiệm này để giải thích cho học viên.
 
         **Câu hỏi:**
         {question}
@@ -24,13 +23,16 @@ def get_ai_explanation(question, options, correct_answer):
 
         **Đáp án đúng:** {correct_answer}
 
-        **Yêu cầu phân tích:**
-        1. **Tóm tắt vấn đề:** Câu hỏi đang yêu cầu gì? Từ khóa quan trọng là gì?
-        2. **Tại sao đáp án đúng là chính xác?** Giải thích dựa trên kiến thức cốt lõi của AWS.
-        3. **Tại sao các lựa chọn khác sai?** Chỉ ra điểm bất hợp lý hoặc thiếu sót của từng lựa chọn sai.
-        4. **Lời khuyên (nếu có):** Mẹo ghi nhớ cho dạng bài này.
+        **Yêu cầu Output (Rất quan trọng):**
+        - **TUYỆT ĐỐI KHÔNG** có lời chào mở đầu (VD: "Chào bạn", "Tôi là chuyên gia...").
+        - **TUYỆT ĐỐI KHÔNG** có lời chúc hay kết luận xã giao ở cuối (VD: "Chúc thi tốt", "Hy vọng giúp ích...").
+        - Chỉ tập trung vào nội dung chuyên môn cô đọng.
 
-        Trình bày định dạng Markdown rõ ràng, dùng bullet points.
+        **Cấu trúc phân tích:**
+        1. **🎯 Phân tích Yêu cầu:** Xác định từ khóa (keywords) và mục tiêu của đề bài.
+        2. **✅ Giải thích đáp án đúng:** Tại sao nó đáp ứng tốt nhất yêu cầu (về kỹ thuật, chi phí, best practice)?
+        3. **❌ Giải thích đáp án sai:** Lí do từng đáp án còn lại không phù hợp.
+        4. **💡 Mẹo nhớ nhanh:** Mapping từ khóa <-> Dịch vụ.
         """
         response = model.generate_content(prompt)
         return response.text
