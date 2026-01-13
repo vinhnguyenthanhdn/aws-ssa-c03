@@ -2,8 +2,11 @@ import streamlit as st
 import streamlit.components.v1 as components
 import random
 import google.generativeai as genai
+
 from pathlib import Path
 from quiz_parser import parse_markdown_file
+from streamlit_local_storage import LocalStorage
+import json
 
 # Configure Gemini
 if "GOOGLE_API_KEY" in st.secrets:
@@ -124,6 +127,23 @@ def load_data():
     return None
 
 def main():
+    # Initialize Local Storage
+    localS = LocalStorage()
+    
+    # Load state from Local Storage if session is fresh
+    if 'data_loaded' not in st.session_state:
+        try:
+            saved_idx = localS.getItem("saa_c03_current_index")
+            saved_ans = localS.getItem("saa_c03_user_answers")
+            
+            st.session_state.current_index = int(saved_idx) if saved_idx is not None else 0
+            st.session_state.user_answers = json.loads(saved_ans) if saved_ans is not None else {}
+            st.session_state.data_loaded = True
+            # Force rerun to apply loadded state related to index
+            if saved_idx is not None: st.rerun()
+        except:
+             st.session_state.data_loaded = True
+
     if 'current_index' not in st.session_state:
         st.session_state.update({'current_index': 0, 'user_answers': {}, 'random_mode': False, 'question_order': []})
 
@@ -188,7 +208,7 @@ def main():
     st.markdown(f"""
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <span class="question-number">{idx_ptr+1}</span>
+
                 <span style="font-size: 1.5rem; font-weight: 700; color: #232f3e;">Question #{idx_ptr+1}</span>
             </div>
             <span style="font-size: 0.875rem; color: #64748b; font-weight: 500;">{idx_ptr+1} of {len(indices)}</span>
@@ -229,6 +249,8 @@ def main():
         if sub and user_ch:
             ans = "".join(sorted(user_ch))
             st.session_state.user_answers[q['id']] = ans
+            localS.setItem("saa_c03_user_answers", json.dumps(st.session_state.user_answers))
+        
         
         # Handle Theory Request
         if theory_req:
@@ -277,7 +299,10 @@ def main():
     with c1:
         if st.button("⬅️ Previous", use_container_width=True):
             if is_search and st.session_state.search_idx > 0: st.session_state.search_idx -= 1; st.rerun()
-            elif not is_search and st.session_state.current_index > 0: st.session_state.current_index -= 1; st.rerun()
+            elif not is_search and st.session_state.current_index > 0: 
+                st.session_state.current_index -= 1
+                localS.setItem("saa_c03_current_index", st.session_state.current_index)
+                st.rerun()
             
     with c2:
         with st.form("jump_to_question", clear_on_submit=False):
@@ -291,12 +316,16 @@ def main():
                          st.session_state.search_idx = jump_val - 1
                     else:
                          st.session_state.current_index = jump_val - 1
+                         localS.setItem("saa_c03_current_index", st.session_state.current_index)
                     st.rerun()
                     
     with c3:
         if st.button("Next ➡️", use_container_width=True):
             if is_search and st.session_state.search_idx < len(indices)-1: st.session_state.search_idx += 1; st.rerun()
-            elif not is_search and st.session_state.current_index < len(questions)-1: st.session_state.current_index += 1; st.rerun()
+            elif not is_search and st.session_state.current_index < len(questions)-1: 
+                st.session_state.current_index += 1
+                localS.setItem("saa_c03_current_index", st.session_state.current_index)
+                st.rerun()
 
 if __name__ == "__main__":
     main()

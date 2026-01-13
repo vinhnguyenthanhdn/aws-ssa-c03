@@ -516,20 +516,7 @@ button[data-testid="baseButton-secondaryFormSubmit"]:hover,
     border: 1px solid var(--slate-200);
 }
 
-/* Question Number Badge */
-.question-number {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: var(--aws-blue);
-    color: #fff;
-    border-radius: 50%;
-    font-weight: 700;
-    font-size: 0.875rem;
-    margin-right: 0.75rem;
-}
+
 
 /* ============================================
    HIGHLIGHT ANSWER
