@@ -1,0 +1,121 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Global styles */
+.stApp {
+    background-color: #f3f4f6;
+    color: #1f2937;
+    font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3 {
+    color: #111827;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Card-like container */
+.question-card {
+    background-color: #ffffff;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin-bottom: 2rem;
+    border: 1px solid #e5e7eb;
+}
+
+.question-text {
+    font-size: 1.15rem;
+    font-weight: 500;
+    line-height: 1.7;
+    color: #374151;
+    margin-bottom: 1.5rem;
+}
+
+/* Option styling */
+.stRadio, .stCheckbox {
+    background-color: #ffffff;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid #f3f4f6;
+    transition: all 0.2s;
+    margin-bottom: 0.5rem;
+}
+
+.stRadio:hover, .stCheckbox:hover {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+}
+
+/* Messages */
+.success-msg {
+    background-color: #ecfdf5;
+    color: #047857;
+    padding: 1.25rem;
+    border-radius: 12px;
+    border: 1px solid #a7f3d0;
+    margin-top: 1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.error-msg {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    padding: 1.25rem;
+    border-radius: 12px;
+    border: 1px solid #fecaca;
+    margin-top: 1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #ffffff;
+    border-right: 1px solid #e5e7eb;
+}
+div[data-testid="stSidebarNav"] {
+    padding-top: 1rem;
+}
+
+/* Buttons */
+div.stButton > button {
+    border-radius: 10px;
+    font-weight: 600;
+    border: none;
+    transition: transform 0.1s;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+div.stButton > button:active {
+    transform: scale(0.98);
+}
+
+.highlight-answer {
+    background-color: #fef3c7;
+    color: #d97706;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+/* Tags */
+.meta-tag {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-right: 0.5rem;
+    margin-bottom: 1rem;
+}
+.topic-tag {
+    background-color: #e0e7ff;
+    color: #4338ca;
+}
+.id-tag {
+    background-color: #e5e7eb;
+    color: #374151;
+}
