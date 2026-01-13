@@ -11,7 +11,7 @@ if "GOOGLE_API_KEY" in st.secrets:
 
 def get_ai_explanation(question, options, correct_answer):
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-3-flash-preview')
         prompt = f"""
         Bạn là chuyên gia AWS Certified Solutions Architect (SAA-C03). 
         Hãy phân tích câu hỏi sau bằng Tiếng Việt một cách chi tiết và dễ hiểu:
