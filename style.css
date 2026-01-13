@@ -24,13 +24,24 @@ section[data-testid="stSidebar"] {
 ._viewerBadge_nim44_23,
 ._container_gzau3_1._viewerBadge_nim44_23,
 [class*="viewerBadge"],
+.viewerBadge_container,
+[data-testid="stFooter"],
 footer,
-.stFooter {
+.stFooter,
+.stDeployButton,
+[data-testid="stToolbar"] {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
     opacity: 0 !important;
     pointer-events: none !important;
+}
+
+/* Hide header decoration if needed to remove top buttons too, usually good practice for "clean" look */
+header[data-testid="stHeader"] {
+    z-index: -1;
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* ============================================
