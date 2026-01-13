@@ -356,7 +356,6 @@ def main():
                 st.rerun()
             
     with c2:
-    with c2:
         jc1, jc2 = st.columns([3, 1], gap="small")
         with jc1:
             # Direct input triggering rerun on Enter
