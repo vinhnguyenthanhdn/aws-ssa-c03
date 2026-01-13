@@ -144,8 +144,11 @@ def main():
         except:
              st.session_state.data_loaded = True
 
-    if 'current_index' not in st.session_state:
-        st.session_state.update({'current_index': 0, 'user_answers': {}, 'random_mode': False, 'question_order': []})
+    # Ensure Session State Initialization
+    if 'current_index' not in st.session_state: st.session_state.current_index = 0
+    if 'user_answers' not in st.session_state: st.session_state.user_answers = {}
+    if 'random_mode' not in st.session_state: st.session_state.random_mode = False
+    if 'question_order' not in st.session_state: st.session_state.question_order = []
 
     # Sidebar
     with st.sidebar:
