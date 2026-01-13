@@ -330,13 +330,12 @@ def main():
                     </div>
                 ''', unsafe_allow_html=True)
             
-            # AI Analysis Section
-            # AI Analysis Section (Only show if explanation exists)
-            if q['id'] in st.session_state.explanations:
-                with st.expander("🤖 Phân Tích (AI Teacher)", expanded=True):
-                    st.markdown(st.session_state.explanations[q['id']])
-                    if q['discussion_link']: 
-                        st.caption(f"[Xem thảo luận gốc trên ExamTopics]({q['discussion_link']})")
+        # AI Analysis Section (Only show if explanation exists)
+        if q['id'] in st.session_state.explanations:
+            with st.expander("🤖 Phân Tích (AI Teacher)", expanded=True):
+                st.markdown(st.session_state.explanations[q['id']])
+                if q['discussion_link']: 
+                    st.caption(f"[Xem thảo luận gốc trên ExamTopics]({q['discussion_link']})")
 
         # Display Theory Section (Independent of Answer status)
         if q['id'] in st.session_state.theories:

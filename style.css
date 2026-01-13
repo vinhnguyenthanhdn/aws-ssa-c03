@@ -96,7 +96,7 @@ header[data-testid="stHeader"] {
 
 /* Limit content width for readability */
 .stApp>div:nth-of-type(1)>div:nth-of-type(1) {
-    max-width: 1000px !important;
+    max-width: 1500px !important;
     margin: 0 auto !important;
 }
 
@@ -763,6 +763,7 @@ section[data-testid="stSidebar"]::-webkit-scrollbar-thumb {
 .stForm [data-testid="stMarkdownContainer"] em {
     display: none !important;
 }
+
 /* Standardize Inputs and Buttons for Alignment */
 [data-testid="stNumberInput"] input {
     min-height: 48px !important;
@@ -770,7 +771,7 @@ section[data-testid="stSidebar"]::-webkit-scrollbar-thumb {
     line-height: normal !important;
 }
 
-div.stButton > button {
+div.stButton>button {
     min-height: 48px !important;
     height: 48px !important;
     display: flex;
