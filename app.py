@@ -36,7 +36,37 @@ def rotate_key():
 if "api_key_index" not in st.session_state: st.session_state.api_key_index = 0
 configure_genai()
 
-def get_ai_explanation(question, options, correct_answer):
+CACHE_FILE = Path(__file__).parent / "ai_cache.json"
+
+def load_cache():
+    if not CACHE_FILE.exists():
+        return {"explanations": {}, "theories": {}}
+    try:
+        return json.loads(CACHE_FILE.read_text(encoding='utf-8'))
+    except:
+        return {"explanations": {}, "theories": {}}
+
+def save_cache(data):
+    try:
+        CACHE_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+    except Exception as e:
+        print(f"Error saving cache: {e}")
+
+def get_cached_content(category, key):
+    data = load_cache()
+    return data.get(category, {}).get(key)
+
+def save_cached_content(category, key, value):
+    data = load_cache()
+    if category not in data: data[category] = {}
+    data[category][key] = value
+    save_cache(data)
+
+def get_ai_explanation(question, options, correct_answer, question_id):
+    # Check cache first
+    cached = get_cached_content("explanations", question_id)
+    if cached: return cached
+
     max_retries = min(len(API_KEYS) + 2, 6) # Try shifting keys first
     for attempt in range(max_retries):
         try:
@@ -65,7 +95,10 @@ def get_ai_explanation(question, options, correct_answer):
             4. **💡 Mẹo nhớ nhanh:** Mapping từ khóa <-> Dịch vụ.
             """
             response = model.generate_content(prompt)
-            return response.text
+            text = response.text
+            # Save to cache
+            save_cached_content("explanations", question_id, text)
+            return text
         except Exception as e:
             if "429" in str(e):
                 # Rotate key and retry
@@ -73,7 +106,11 @@ def get_ai_explanation(question, options, correct_answer):
                 continue 
             return f"⚠ Không thể tải phân tích từ AI. Lỗi: {str(e)}"
 
-def get_ai_theory(question, options):
+def get_ai_theory(question, options, question_id):
+    # Check cache first
+    cached = get_cached_content("theories", question_id)
+    if cached: return cached
+
     max_retries = min(len(API_KEYS) + 2, 6)
     for attempt in range(max_retries):
         try:
@@ -93,7 +130,10 @@ def get_ai_theory(question, options):
             - Trình bày dạng danh sách Markdown sạch sẽ.
             """
             response = model.generate_content(prompt)
-            return response.text
+            text = response.text
+            # Save to cache
+            save_cached_content("theories", question_id, text)
+            return text
         except Exception as e:
             if "429" in str(e):
                 rotate_key()
@@ -304,14 +344,14 @@ def main():
              if q['id'] not in st.session_state.theories:
                  with st.spinner("Đang tổng hợp kiến thức..."):
                      opts_text = "\n".join(q['options'])
-                     st.session_state.theories[q['id']] = get_ai_theory(q['question'], opts_text)
+                     st.session_state.theories[q['id']] = get_ai_theory(q['question'], opts_text, q['id'])
 
         # Handle Explain Request
         if explain_req:
             if q['id'] not in st.session_state.explanations:
                 with st.spinner("Đang phân tích câu hỏi... (Gemini AI)"):
                     opts_text = "\n".join(q['options'])
-                    explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'])
+                    explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'])
                     st.session_state.explanations[q['id']] = explanation
         
         # Display Results & Content
