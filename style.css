@@ -119,3 +119,76 @@ div.stButton > button:active {
     background-color: #e5e7eb;
     color: #374151;
 }
+
+/* ===== FIX: Force text colors to prevent white-on-white bug ===== */
+
+/* Radio button and Checkbox options text */
+.stRadio label,
+.stRadio p,
+.stRadio span,
+.stCheckbox label,
+.stCheckbox p,
+.stCheckbox span,
+div[data-testid="stRadio"] label,
+div[data-testid="stRadio"] p,
+div[data-testid="stCheckbox"] label,
+div[data-testid="stCheckbox"] p {
+    color: #1f2937 !important;
+}
+
+/* All form labels */
+.stTextInput label,
+.stNumberInput label,
+.stSelectbox label,
+.stMultiSelect label,
+.stTextArea label,
+.stFileUploader label {
+    color: #374151 !important;
+}
+
+/* Input text */
+.stTextInput input,
+.stNumberInput input {
+    color: #1f2937 !important;
+    background-color: #ffffff !important;
+}
+
+/* Sidebar text and labels */
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3,
+section[data-testid="stSidebar"] h4,
+section[data-testid="stSidebar"] .stMarkdown {
+    color: #1f2937 !important;
+}
+
+/* Sidebar header */
+section[data-testid="stSidebar"] header {
+    color: #111827 !important;
+}
+
+/* General markdown text */
+.stMarkdown p,
+.stMarkdown span,
+.stMarkdown li {
+    color: #374151 !important;
+}
+
+/* Expander text */
+.streamlit-expanderHeader,
+.streamlit-expanderContent p {
+    color: #1f2937 !important;
+}
+
+/* Warning and info boxes text */
+.stAlert p {
+    color: inherit !important;
+}
+
+/* Progress bar label */
+div[data-testid="stProgress"] span {
+    color: #6b7280 !important;
+}
