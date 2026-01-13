@@ -1,169 +1,566 @@
-/* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* ============================================
+   AWS SAA-C03 Quiz - Premium Modern UI
+   Color Palette: AWS Inspired
+   - Primary Blue: #232f3e
+   - AWS Orange: #ff9900
+   - Background: #f8fafc (Slate 50)
+   ============================================ */
 
-/* Global styles */
+/* Import Google Fonts - Clean Sans-serif Stack */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ============================================
+   ROOT VARIABLES
+   ============================================ */
+:root {
+    --aws-blue: #232f3e;
+    --aws-blue-light: #37475a;
+    --aws-blue-dark: #131a22;
+    --aws-orange: #ff9900;
+    --aws-orange-hover: #ec7211;
+    --aws-orange-light: #fff4e5;
+
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+
+    --success-bg: #ecfdf5;
+    --success-border: #10b981;
+    --success-text: #065f46;
+    --error-bg: #fef2f2;
+    --error-border: #ef4444;
+    --error-text: #991b1b;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-2xl: 24px;
+}
+
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
 .stApp {
-    background-color: #f3f4f6;
-    color: #1f2937;
-    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, var(--slate-50) 0%, var(--slate-100) 100%);
+    color: var(--slate-800);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
 }
 
 h1,
 h2,
-h3 {
-    color: #111827;
+h3,
+h4,
+h5,
+h6 {
+    color: var(--aws-blue) !important;
     font-weight: 700;
     font-family: 'Inter', sans-serif;
+    letter-spacing: -0.02em;
 }
 
-/* Card-like container */
+/* ============================================
+   QUESTION CARD - Premium Styling
+   ============================================ */
 .question-card {
-    background-color: #ffffff;
-    padding: 2.5rem;
-    border-radius: 16px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    margin-bottom: 2rem;
-    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    padding: 2rem 2.5rem;
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-xl);
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--slate-200);
+    border-left: 5px solid var(--aws-orange);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.question-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--aws-orange) 0%, var(--aws-blue) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.question-card:hover::before {
+    opacity: 1;
 }
 
 .question-text {
-    font-size: 1.15rem;
+    font-size: 1.125rem;
     font-weight: 500;
-    line-height: 1.7;
-    color: #374151;
-    margin-bottom: 1.5rem;
+    line-height: 1.8;
+    color: var(--slate-700);
+    margin: 0;
 }
 
-/* Option styling */
-.stRadio,
-.stCheckbox {
-    background-color: #ffffff;
-    padding: 1rem;
-    border-radius: 12px;
-    border: 1px solid #f3f4f6;
-    transition: all 0.2s;
-    margin-bottom: 0.5rem;
+.question-text code {
+    background: var(--slate-100);
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.9em;
+    color: var(--aws-blue);
+    font-weight: 600;
 }
 
-.stRadio:hover,
-.stCheckbox:hover {
-    background-color: #f9fafb;
-    border-color: #d1d5db;
+/* ============================================
+   OPTION TILES - Radio Buttons & Checkboxes
+   ============================================ */
+.stRadio>div,
+.stCheckbox>div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
-/* Messages */
+.stRadio>div>label,
+.stCheckbox>label {
+    background: #ffffff !important;
+    padding: 1rem 1.25rem !important;
+    border-radius: var(--radius-md) !important;
+    border: 2px solid var(--slate-200) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    box-shadow: var(--shadow-sm) !important;
+    position: relative !important;
+}
+
+.stRadio>div>label:hover,
+.stCheckbox>label:hover {
+    background: var(--aws-orange-light) !important;
+    border-color: var(--aws-orange) !important;
+    transform: translateX(4px);
+    box-shadow: var(--shadow-md) !important;
+}
+
+.stRadio>div>label:has(input:checked),
+.stCheckbox>label:has(input:checked) {
+    background: linear-gradient(135deg, var(--aws-orange-light) 0%, #fff 100%) !important;
+    border-color: var(--aws-orange) !important;
+    box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.15), var(--shadow-md) !important;
+}
+
+/* Custom Radio Circle */
+.stRadio>div>label>div:first-child {
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 50% !important;
+    border: 2px solid var(--slate-300) !important;
+    background: #fff !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.stRadio>div>label:has(input:checked)>div:first-child {
+    border-color: var(--aws-orange) !important;
+    background: var(--aws-orange) !important;
+}
+
+.stRadio>div>label:has(input:checked)>div:first-child::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: #fff;
+    border-radius: 50%;
+}
+
+/* Custom Checkbox */
+.stCheckbox>label>div:first-child {
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 6px !important;
+    border: 2px solid var(--slate-300) !important;
+    background: #fff !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.stCheckbox>label:has(input:checked)>div:first-child {
+    border-color: var(--aws-orange) !important;
+    background: var(--aws-orange) !important;
+}
+
+/* Option Text Styling */
+.stRadio>div>label p,
+.stRadio>div>label span,
+.stCheckbox>label p,
+.stCheckbox>label span {
+    color: var(--slate-700) !important;
+    font-weight: 500 !important;
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+}
+
+/* ============================================
+   FEEDBACK BANNERS - Success & Error
+   ============================================ */
 .success-msg {
-    background-color: #ecfdf5;
-    color: #047857;
-    padding: 1.25rem;
-    border-radius: 12px;
-    border: 1px solid #a7f3d0;
-    margin-top: 1rem;
-    font-weight: 500;
+    background: linear-gradient(135deg, var(--success-bg) 0%, #d1fae5 100%);
+    color: var(--success-text);
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--success-border);
+    border-left: 4px solid var(--success-border);
+    margin-top: 1.5rem;
+    font-weight: 600;
     display: flex;
     align-items: center;
+    gap: 0.75rem;
+    box-shadow: var(--shadow-md);
+    animation: slideIn 0.3s ease-out;
+}
+
+.success-msg::before {
+    content: '✓';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--success-border);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.875rem;
+    font-weight: 700;
+    flex-shrink: 0;
 }
 
 .error-msg {
-    background-color: #fef2f2;
-    color: #b91c1c;
-    padding: 1.25rem;
-    border-radius: 12px;
-    border: 1px solid #fecaca;
-    margin-top: 1rem;
-    font-weight: 500;
+    background: linear-gradient(135deg, var(--error-bg) 0%, #fee2e2 100%);
+    color: var(--error-text);
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--error-border);
+    border-left: 4px solid var(--error-border);
+    margin-top: 1.5rem;
+    font-weight: 600;
     display: flex;
     align-items: center;
+    gap: 0.75rem;
+    box-shadow: var(--shadow-md);
+    animation: slideIn 0.3s ease-out;
 }
 
-/* Sidebar */
+.error-msg::before {
+    content: '✕';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--error-border);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.875rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   SIDEBAR - AWS Dark Theme
+   ============================================ */
 section[data-testid="stSidebar"] {
-    background-color: #ffffff;
-    border-right: 1px solid #e5e7eb;
+    background: linear-gradient(180deg, var(--aws-blue) 0%, var(--aws-blue-dark) 100%) !important;
+    border-right: none !important;
+    box-shadow: var(--shadow-xl) !important;
 }
 
-div[data-testid="stSidebarNav"] {
-    padding-top: 1rem;
+section[data-testid="stSidebar"]>div {
+    padding: 1.5rem 1rem !important;
 }
 
-/* Buttons */
+/* Sidebar Header */
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3,
+section[data-testid="stSidebar"] h4 {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+/* Sidebar Text */
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] .stMarkdown {
+    color: var(--slate-200) !important;
+}
+
+section[data-testid="stSidebar"] strong {
+    color: var(--aws-orange) !important;
+}
+
+/* Sidebar Divider */
+section[data-testid="stSidebar"] hr {
+    border-color: var(--aws-blue-light) !important;
+    margin: 1.25rem 0 !important;
+}
+
+/* Sidebar Input Fields */
+section[data-testid="stSidebar"] .stTextInput input,
+section[data-testid="stSidebar"] .stNumberInput input {
+    background: var(--aws-blue-light) !important;
+    border: 1px solid var(--aws-blue-light) !important;
+    color: #ffffff !important;
+    border-radius: var(--radius-md) !important;
+    padding: 0.75rem 1rem !important;
+    transition: all 0.2s ease !important;
+}
+
+section[data-testid="stSidebar"] .stTextInput input:focus,
+section[data-testid="stSidebar"] .stNumberInput input:focus {
+    border-color: var(--aws-orange) !important;
+    box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.2) !important;
+}
+
+section[data-testid="stSidebar"] .stTextInput input::placeholder {
+    color: var(--slate-400) !important;
+}
+
+/* ============================================
+   PROGRESS BAR - Modern Thin Style
+   ============================================ */
+section[data-testid="stSidebar"] div[data-testid="stProgress"] {
+    margin: 1rem 0 !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stProgress"]>div {
+    background: var(--aws-blue-light) !important;
+    border-radius: 100px !important;
+    height: 8px !important;
+    overflow: hidden !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stProgress"]>div>div {
+    background: linear-gradient(90deg, var(--aws-orange) 0%, #ffb84d 100%) !important;
+    border-radius: 100px !important;
+    height: 100% !important;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 0 10px rgba(255, 153, 0, 0.5) !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stProgress"] span {
+    display: none !important;
+}
+
+/* ============================================
+   BUTTONS - AWS Styled
+   ============================================ */
 div.stButton>button {
-    border-radius: 10px;
-    font-weight: 600;
-    border: 1px solid #d1d5db !important;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    background-color: #ffffff !important;
-    color: #374151 !important;
+    border-radius: var(--radius-md) !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    padding: 0.625rem 1.25rem !important;
+    border: none !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: var(--shadow-sm) !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
 }
 
-div.stButton>button:hover {
-    background-color: #f3f4f6 !important;
-    border-color: #9ca3af !important;
-    color: #1f2937 !important;
+/* Sidebar Buttons */
+section[data-testid="stSidebar"] div.stButton>button {
+    background: var(--aws-blue-light) !important;
+    color: #ffffff !important;
+    border: 1px solid transparent !important;
+    width: 100% !important;
 }
 
-div.stButton>button:active {
-    transform: scale(0.98);
-    background-color: #e5e7eb !important;
+section[data-testid="stSidebar"] div.stButton>button:hover {
+    background: var(--aws-orange) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: var(--shadow-md) !important;
 }
 
-/* Primary action buttons (Submit) */
-div.stButton>button[kind="primary"],
+section[data-testid="stSidebar"] div.stButton>button:active {
+    transform: translateY(0) scale(0.98) !important;
+}
+
+/* Main Area Buttons */
+.stApp>div>div>div>div div.stButton>button {
+    background: #ffffff !important;
+    color: var(--slate-700) !important;
+    border: 2px solid var(--slate-200) !important;
+}
+
+.stApp>div>div>div>div div.stButton>button:hover {
+    background: var(--slate-50) !important;
+    border-color: var(--aws-orange) !important;
+    color: var(--aws-blue) !important;
+}
+
+/* Submit Button - Primary Action */
 form[data-testid="stForm"] div.stButton>button,
 button[data-testid="stBaseButton-secondaryFormSubmit"],
 button[data-testid="baseButton-secondaryFormSubmit"],
-button[data-testid="stFormSubmitButton"],
 [data-testid="stForm"] button,
 .stFormSubmitButton>button {
-    background-color: #3b82f6 !important;
+    background: linear-gradient(135deg, var(--aws-orange) 0%, var(--aws-orange-hover) 100%) !important;
     color: #ffffff !important;
-    border-color: #3b82f6 !important;
+    border: none !important;
+    padding: 0.875rem 2rem !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(255, 153, 0, 0.4) !important;
 }
 
-div.stButton>button[kind="primary"]:hover,
 form[data-testid="stForm"] div.stButton>button:hover,
 button[data-testid="stBaseButton-secondaryFormSubmit"]:hover,
 button[data-testid="baseButton-secondaryFormSubmit"]:hover,
 [data-testid="stForm"] button:hover,
 .stFormSubmitButton>button:hover {
-    background-color: #2563eb !important;
-    border-color: #2563eb !important;
-    color: #ffffff !important;
+    background: linear-gradient(135deg, var(--aws-orange-hover) 0%, #d4610d 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(255, 153, 0, 0.5) !important;
 }
 
-.highlight-answer {
-    background-color: #fef3c7;
-    color: #d97706;
-    padding: 0.2rem 0.6rem;
-    border-radius: 6px;
-    font-weight: bold;
-}
-
-/* Tags */
+/* ============================================
+   TAGS & BADGES
+   ============================================ */
 .meta-tag {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 100px;
     font-size: 0.75rem;
     font-weight: 600;
     margin-right: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
 }
 
 .topic-tag {
-    background-color: #e0e7ff;
-    color: #4338ca;
+    background: linear-gradient(135deg, var(--aws-orange-light) 0%, #ffe4cc 100%);
+    color: var(--aws-orange-hover);
+    border: 1px solid rgba(255, 153, 0, 0.3);
 }
 
 .id-tag {
-    background-color: #e5e7eb;
-    color: #374151;
+    background: var(--slate-100);
+    color: var(--slate-600);
+    border: 1px solid var(--slate-200);
 }
 
-/* ===== FIX: Force text colors to prevent white-on-white bug ===== */
+/* Question Number Badge */
+.question-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--aws-blue);
+    color: #fff;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.875rem;
+    margin-right: 0.75rem;
+}
 
-/* Radio button and Checkbox options text */
+/* ============================================
+   HIGHLIGHT ANSWER
+   ============================================ */
+.highlight-answer {
+    background: linear-gradient(135deg, var(--aws-orange-light) 0%, #fff4e5 100%);
+    color: var(--aws-orange-hover);
+    padding: 0.375rem 0.875rem;
+    border-radius: 8px;
+    font-weight: 700;
+    border: 1px solid rgba(255, 153, 0, 0.3);
+    display: inline-block;
+    font-size: 1rem;
+}
+
+/* ============================================
+   EXPANDER - Discussion Section
+   ============================================ */
+.streamlit-expanderHeader {
+    background: var(--slate-50) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 1rem 1.25rem !important;
+    font-weight: 600 !important;
+    color: var(--slate-700) !important;
+    border: 1px solid var(--slate-200) !important;
+    transition: all 0.2s ease !important;
+}
+
+.streamlit-expanderHeader:hover {
+    background: #ffffff !important;
+    border-color: var(--aws-orange) !important;
+}
+
+.streamlit-expanderContent {
+    padding: 1.5rem !important;
+    background: #ffffff !important;
+    border: 1px solid var(--slate-200) !important;
+    border-top: none !important;
+    border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
+}
+
+/* ============================================
+   FORMS
+   ============================================ */
+form[data-testid="stForm"] {
+    background: var(--slate-50);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--slate-200);
+}
+
+/* ============================================
+   ALERTS & INFO BOXES
+   ============================================ */
+.stAlert {
+    border-radius: var(--radius-md) !important;
+    border-left-width: 4px !important;
+}
+
+.stAlert>div {
+    padding: 1rem 1.25rem !important;
+}
+
+/* ============================================
+   TEXT COLORS - Override for Visibility
+   ============================================ */
 .stRadio label,
 .stRadio p,
 .stRadio span,
@@ -174,62 +571,145 @@ div[data-testid="stRadio"] label,
 div[data-testid="stRadio"] p,
 div[data-testid="stCheckbox"] label,
 div[data-testid="stCheckbox"] p {
-    color: #1f2937 !important;
+    color: var(--slate-700) !important;
 }
 
-/* All form labels */
 .stTextInput label,
 .stNumberInput label,
 .stSelectbox label,
 .stMultiSelect label,
 .stTextArea label,
 .stFileUploader label {
-    color: #374151 !important;
+    color: var(--slate-600) !important;
+    font-weight: 500 !important;
 }
 
-/* Input text */
 .stTextInput input,
 .stNumberInput input {
-    color: #1f2937 !important;
+    color: var(--slate-800) !important;
     background-color: #ffffff !important;
+    border-radius: var(--radius-md) !important;
+    border: 2px solid var(--slate-200) !important;
+    transition: all 0.2s ease !important;
 }
 
-/* Sidebar text and labels */
-section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] span,
-section[data-testid="stSidebar"] label,
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h3,
-section[data-testid="stSidebar"] h4,
-section[data-testid="stSidebar"] .stMarkdown {
-    color: #1f2937 !important;
+.stTextInput input:focus,
+.stNumberInput input:focus {
+    border-color: var(--aws-orange) !important;
+    box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.15) !important;
 }
 
-/* Sidebar header */
-section[data-testid="stSidebar"] header {
-    color: #111827 !important;
-}
-
-/* General markdown text */
 .stMarkdown p,
 .stMarkdown span,
 .stMarkdown li {
-    color: #374151 !important;
+    color: var(--slate-700) !important;
 }
 
-/* Expander text */
 .streamlit-expanderHeader,
 .streamlit-expanderContent p {
-    color: #1f2937 !important;
+    color: var(--slate-700) !important;
 }
 
-/* Warning and info boxes text */
-.stAlert p {
-    color: inherit !important;
+/* ============================================
+   NAVIGATION BUTTONS - Arrow Style
+   ============================================ */
+.nav-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: #ffffff;
+    border: 2px solid var(--slate-200);
+    border-radius: 50%;
+    color: var(--slate-600);
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-/* Progress bar label */
-div[data-testid="stProgress"] span {
-    color: #6b7280 !important;
+.nav-button:hover {
+    background: var(--aws-orange);
+    border-color: var(--aws-orange);
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Loading State */
+.loading {
+    animation: pulse 1.5s infinite;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+@media (max-width: 768px) {
+    .question-card {
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
+    }
+
+    .question-text {
+        font-size: 1rem;
+    }
+
+    .stRadio>div>label,
+    .stCheckbox>label {
+        padding: 0.875rem 1rem !important;
+    }
+}
+
+/* ============================================
+   SCROLLBAR - Custom Styling
+   ============================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--slate-100);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--slate-300);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--slate-400);
+}
+
+section[data-testid="stSidebar"]::-webkit-scrollbar-track {
+    background: var(--aws-blue-light);
+}
+
+section[data-testid="stSidebar"]::-webkit-scrollbar-thumb {
+    background: var(--aws-blue);
 }

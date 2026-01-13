@@ -79,10 +79,23 @@ def main():
     q = questions[real_idx]
     
     # UI Render
-    st.markdown(f"### Q#{q['id']} <span class='meta-tag topic-tag'>Topic {q['topic']}</span> <span style='float:right;font-size:0.8em'>{idx_ptr+1}/{len(indices)}</span>", unsafe_allow_html=True)
+    st.markdown(f"""
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="question-number">{idx_ptr+1}</span>
+                <span style="font-size: 1.5rem; font-weight: 700; color: #232f3e;">Question #{q['id']}</span>
+                <span class="meta-tag topic-tag">📚 Topic {q['topic']}</span>
+            </div>
+            <span style="font-size: 0.875rem; color: #64748b; font-weight: 500;">{idx_ptr+1} of {len(indices)}</span>
+        </div>
+    """, unsafe_allow_html=True)
     
     with st.container():
         st.markdown(f'<div class="question-card"><div class="question-text">{q["question"].replace(chr(10), "<br>")}</div></div>', unsafe_allow_html=True)
+        
+        # Show multi-select hint
+        if q['is_multiselect']:
+            st.markdown('<p style="color: #ff9900; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.5rem;">📌 Select all that apply</p>', unsafe_allow_html=True)
         
         with st.form(key=f"q_{q['id']}"):
             user_ch = []
@@ -90,10 +103,10 @@ def main():
                 for opt in q['options']:
                     if st.checkbox(opt): user_ch.append(opt.split('.')[0])
             else:
-                sel = st.radio("Ans:", q['options'], index=None, label_visibility="collapsed")
+                sel = st.radio("Select your answer:", q['options'], index=None, label_visibility="collapsed")
                 if sel: user_ch.append(sel.split('.')[0])
             
-            sub = st.form_submit_button("Submit")
+            sub = st.form_submit_button("✓ Submit Answer")
             
         ans = st.session_state.user_answers.get(q['id'])
         if sub and user_ch:
@@ -102,9 +115,18 @@ def main():
             
         if ans:
             correct = ans == (q['correct_answer'] or "")
-            cls = "success-msg" if correct else "error-msg"
-            icon = "✅" if correct else "❌"
-            st.markdown(f'<div class="{cls}">{icon} You chose: {ans}</div>', unsafe_allow_html=True)
+            if correct:
+                st.markdown(f'''
+                    <div class="success-msg">
+                        <span style="margin-left: 0.5rem;">Correct! You answered: <strong>{ans}</strong></span>
+                    </div>
+                ''', unsafe_allow_html=True)
+            else:
+                st.markdown(f'''
+                    <div class="error-msg">
+                        <span style="margin-left: 0.5rem;">Incorrect. You answered: <strong>{ans}</strong></span>
+                    </div>
+                ''', unsafe_allow_html=True)
             
             with st.expander("Discussion", expanded=True):
                 st.markdown(f"**Official:** <span class='highlight-answer'>{q['correct_answer']}</span>", unsafe_allow_html=True)
