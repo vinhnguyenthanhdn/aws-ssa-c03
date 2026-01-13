@@ -78,7 +78,7 @@ def get_ai_theory(question, options):
     for attempt in range(max_retries):
         try:
             configure_genai()
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-3-flash-preview')
             prompt = f"""
             Bạn là từ điển sống về AWS. Hãy giải thích ngắn gọn các **Dịch vụ** hoặc **Khái niệm** AWS xuất hiện trong văn bản sau:
     
