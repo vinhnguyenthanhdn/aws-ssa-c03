@@ -211,7 +211,7 @@ def main():
                 sel = st.radio("Select your answer:", q['options'], index=None, label_visibility="collapsed")
                 if sel: user_ch.append(sel.split('.')[0])
             
-                if sel: user_ch.append(sel.split('.')[0])
+
             
             f1, f2 = st.columns([1, 1])
             with f1:
