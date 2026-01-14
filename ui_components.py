@@ -2,39 +2,35 @@ import streamlit as st
 from translations import get_text, get_available_languages
 
 def render_language_selector():
-    """Render language selector button in top-right corner."""
+    """Render language selector buttons."""
     # Get current language
     lang = st.session_state.get('language', 'vi')
     languages = get_available_languages()
     
-    # Create container for language selector
-    st.markdown("""
-        <style>
-        .lang-selector {
-            position: fixed;
-            top: 4rem;
-            right: 1rem;
-            z-index: 999;
-            background: white;
-            border-radius: 8px;
-            padding: 0.25rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        </style>
-    """, unsafe_allow_html=True)
+    # Create a container at the top for language selection
+    cols = st.columns([8, 1, 1])
     
-    # Create columns for language buttons
-    col1, col2, col3 = st.columns([10, 1, 1])
-    
-    with col2:
-        if st.button(languages['vi']['flag'], key='lang_vi', help=languages['vi']['name']):
+    with cols[1]:
+        # Vietnamese button
+        btn_style = "primary" if lang == "vi" else "secondary"
+        if st.button(f"{languages['vi']['flag']} {languages['vi']['name']}", 
+                     key='lang_vi', 
+                     use_container_width=True,
+                     type=btn_style):
             st.session_state.language = 'vi'
             st.rerun()
     
-    with col3:
-        if st.button(languages['en']['flag'], key='lang_en', help=languages['en']['name']):
+    with cols[2]:
+        # English button
+        btn_style = "primary" if lang == "en" else "secondary"
+        if st.button(f"{languages['en']['flag']} {languages['en']['name']}", 
+                     key='lang_en', 
+                     use_container_width=True,
+                     type=btn_style):
             st.session_state.language = 'en'
             st.rerun()
+    
+    st.divider()
 
 def render_page_header():
     """Render the main page title."""
@@ -174,23 +170,32 @@ def render_navigation_buttons(idx_ptr, total, is_search, on_prev, on_next, on_ju
         if st.button(t('btn_next'), use_container_width=True):
             on_next()
 
+
 def render_sidebar_tools(total_questions, answered_count):
-    """Render sidebar settings and tools."""
+    """Render tools in main area (no sidebar)."""
     lang = st.session_state.get('language', 'vi')
     t = lambda key: get_text(lang, key)
-    st.header(t('settings'))
     
-    # Progress
-    st.markdown(f"**{t('total_qs')}:** {total_questions} | **{t('done')}:** {answered_count}")
-    st.progress(min(answered_count / total_questions, 1.0))
+    # Create compact horizontal layout
+    col1, col2, col3, col4 = st.columns([3, 2, 1, 1])
+    
+    with col1:
+        # Search
+        search = st.text_input(t('search'), placeholder="Search questions...", label_visibility="collapsed")
+    
+    with col2:
+        # Progress display
+        progress_pct = int((answered_count / total_questions) * 100) if total_questions > 0 else 0
+        st.metric(label=t('done'), value=f"{answered_count}/{total_questions} ({progress_pct}%)")
+    
+    with col3:
+        # Shuffle button
+        shuffle_clicked = st.button(t('shuffle'), use_container_width=True)
+    
+    with col4:
+        # Reset button
+        reset_clicked = st.button(t('reset'), use_container_width=True)
+    
     st.divider()
-    
-    # Search
-    search = st.text_input(t('search'))
-    
-    # Shuffle and Reset buttons
-    c1, c2 = st.columns(2)
-    shuffle_clicked = c1.button(t('shuffle'))
-    reset_clicked = c2.button(t('reset'))
     
     return search, shuffle_clicked, reset_clicked

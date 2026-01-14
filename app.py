@@ -97,30 +97,30 @@ def handle_navigation(is_search, idx_ptr, total_indices, total_questions):
     
     render_navigation_buttons(idx_ptr, total_indices, is_search, on_prev, on_next, on_jump)
 
-def handle_sidebar(questions, localS):
-    """Handle sidebar rendering and actions."""
+def handle_tools(questions, localS):
+    """Handle tools rendering and actions (no sidebar)."""
     total = len(questions)
     
-    with st.sidebar:
-        search, shuffle_clicked, reset_clicked = render_sidebar_tools(
-            total, 
-            len(st.session_state.user_answers)
-        )
-        
-        # Handle shuffle
-        if shuffle_clicked:
-            st.session_state.random_mode = True
-            random.shuffle(st.session_state.question_order)
-            st.session_state.current_index = 0
-            st.rerun()
-        
-        # Handle reset
-        if reset_clicked:
-            st.session_state.random_mode = False
-            st.session_state.question_order = list(range(total))
-            st.session_state.current_index = 0
-            st.session_state.user_answers = {}
-            st.rerun()
+    # Render tools in main area
+    search, shuffle_clicked, reset_clicked = render_sidebar_tools(
+        total, 
+        len(st.session_state.user_answers)
+    )
+    
+    # Handle shuffle
+    if shuffle_clicked:
+        st.session_state.random_mode = True
+        random.shuffle(st.session_state.question_order)
+        st.session_state.current_index = 0
+        st.rerun()
+    
+    # Handle reset
+    if reset_clicked:
+        st.session_state.random_mode = False
+        st.session_state.question_order = list(range(total))
+        st.session_state.current_index = 0
+        st.session_state.user_answers = {}
+        st.rerun()
     
     return search
 
@@ -231,13 +231,12 @@ def main():
     lang = st.session_state.get('language', 'vi')
     
     if not content:
-        with st.sidebar:
-            st.header(get_text(lang, 'settings'))
-            uploaded = st.file_uploader(get_text(lang, 'upload_file'), type=["md"])
-            if uploaded:
-                content = uploaded.getvalue().decode("utf-8")
-            else:
-                st.stop()
+        st.header(get_text(lang, 'settings'))
+        uploaded = st.file_uploader(get_text(lang, 'upload_file'), type=["md"])
+        if uploaded:
+            content = uploaded.getvalue().decode("utf-8")
+        else:
+            st.stop()
     
     questions = parse_markdown_file(content)
     total = len(questions)
@@ -246,16 +245,18 @@ def main():
     if len(st.session_state.question_order) != total:
         st.session_state.question_order = list(range(total))
     
-    # Handle sidebar
-    search = handle_sidebar(questions, localS)
+    # Render UI headers
+    render_language_selector()  # Add language selector at the top
+    render_page_header()
+    
+    # Handle tools (search, shuffle, reset) - render after headers
+    search = handle_tools(questions, localS)
     
     # Get current question
     indices, idx_ptr, real_idx, is_search = get_current_question_index(search, questions)
     q = questions[real_idx]
     
-    # Render UI
-    render_language_selector()  # Add language selector at the top
-    render_page_header()
+    # Render question header
     render_question_header(idx_ptr, len(indices))
     
     with st.container():
