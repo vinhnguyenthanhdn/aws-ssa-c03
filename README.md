@@ -5,7 +5,7 @@ This is a Streamlit application for practicing AWS Solutions Architect Associate
 ## Deployment to Streamlit Cloud
 
 To deploy this app to Streamlit Cloud, follow these steps:
-
+ 
 1.  **Push to GitHub**: ensure this repository is pushed to your GitHub account.
     ```bash
     git add .
