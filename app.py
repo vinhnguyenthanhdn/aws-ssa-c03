@@ -148,7 +148,7 @@ def render_question_form(q, localS):
                 st.session_state.theories[theory_cache_key] = get_ai_theory(q['question'], opts_text, q['id'], lang)
             else:
                 # Already cached - fake loading for UX consistency
-                time.sleep(1)
+                time.sleep(3)
         # Set active section to theory, hide explanation
         st.session_state.active_ai_section = 'theory'
     
@@ -162,7 +162,7 @@ def render_question_form(q, localS):
                 st.session_state.explanations[explanation_cache_key] = explanation
             else:
                 # Already cached - fake loading for UX consistency
-                time.sleep(1)
+                time.sleep(3)
         # Set active section to explanation, hide theory
         st.session_state.active_ai_section = 'explanation'
     
