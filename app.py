@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+import time
 from pathlib import Path
 
 # Import custom modules
@@ -140,20 +141,28 @@ def render_question_form(q, localS):
     
     # Handle theory request
     if theory_req:
-        if theory_cache_key not in st.session_state.theories:
-            with st.spinner(t('loading_theory')):
+        with st.spinner(t('loading_theory')):
+            if theory_cache_key not in st.session_state.theories:
+                # Not cached - fetch from AI
                 opts_text = "\n".join(q['options'])
                 st.session_state.theories[theory_cache_key] = get_ai_theory(q['question'], opts_text, q['id'], lang)
+            else:
+                # Already cached - fake loading for UX consistency
+                time.sleep(1)
         # Set active section to theory, hide explanation
         st.session_state.active_ai_section = 'theory'
     
     # Handle explanation request
     if explain_req:
-        if explanation_cache_key not in st.session_state.explanations:
-            with st.spinner(t('loading_explanation')):
+        with st.spinner(t('loading_explanation')):
+            if explanation_cache_key not in st.session_state.explanations:
+                # Not cached - fetch from AI
                 opts_text = "\n".join(q['options'])
                 explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'], lang)
                 st.session_state.explanations[explanation_cache_key] = explanation
+            else:
+                # Already cached - fake loading for UX consistency
+                time.sleep(1)
         # Set active section to explanation, hide theory
         st.session_state.active_ai_section = 'explanation'
     
