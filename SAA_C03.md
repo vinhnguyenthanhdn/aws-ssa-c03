@@ -58,7 +58,7 @@ D. Create and configure an Auto Scaling group to launch private EC2 instances in
 
 E. Migrate the database to an Amazon Aurora MySQL cluster with cross-Region read replicas.
 
-**Answer: B**
+**Answer: BC**
 
 **Timestamp: Aug. 3, 2024, 10:53 a.m.**
 
