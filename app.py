@@ -5,7 +5,7 @@ import json
 import time
 
 # Early Page Config for faster initial render
-st.write('<style>div.block-container{padding-top:2rem;}</style>', unsafe_allow_html=True) # Minimize top padding
+st.write('<style>div.block-container{padding-top:1rem;}</style>', unsafe_allow_html=True) # Minimize top padding
 st.set_page_config(
     page_title="AWS Certified Solutions Architect Associate (SAA-C03)", 
     page_icon="☁️", 
