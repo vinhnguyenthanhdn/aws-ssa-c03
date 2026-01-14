@@ -43,21 +43,21 @@ def render_page_header():
 
 def render_footer():
     """Render the footer with contact information."""
-    st.divider()
     st.markdown("""
-        <div style="text-align: center; color: #64748b; font-size: 0.875rem; padding: 1rem 0;">
+        <style>
+            .block-container {
+                padding-bottom: 120px !important;
+            }
+            .fixed-footer {
+                position: fixed;
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                background-color: #ffffff;
+        <hr style="margin: 1.5rem 0 1rem 0; border: none; border-top: 1px solid #e2e8f0;">
+        <div style="text-align: center; color: #64748b; font-size: 0.875rem; padding-bottom: 0.5rem;">
             <p style="margin-bottom: 0.5rem;">Developed by Vinh Nguyen.</p>
-            <p>Found any errors or have suggestions for improvement?<br>Please reach out: <a href="mailto:vinh.nguyenthanhdn@gmail.com">vinh.nguyenthanhdn@gmail.com</a></p>
-        </div>
-    """, unsafe_allow_html=True)
-
-def render_footer():
-    """Render the footer with contact information."""
-    st.divider()
-    st.markdown("""
-        <div style="text-align: center; color: #64748b; font-size: 0.875rem; padding: 1rem 0;">
-            <p style="margin-bottom: 0.5rem;">Developed by Vinh Nguyen.</p>
-            <p>Found any errors or have suggestions for improvement?<br>Please reach out to: <a href="mailto:vinh.nguyenthanhdn@gmail.com">vinh.nguyenthanhdn@gmail.com</a></p>
+            <p style="margin-bottom: 0;">Found any errors or have suggestions for improvement? <br>Please reach out to: <a href="mailto:vinh.nguyenthanhdn@gmail.com" style="color: #475569; text-decoration: none; font-weight: 500;">vinh.nguyenthanhdn@gmail.com</a></p>
         </div>
     """, unsafe_allow_html=True)
 

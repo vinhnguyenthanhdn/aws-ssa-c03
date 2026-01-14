@@ -98,6 +98,7 @@ header[data-testid="stHeader"] {
 .stApp>div:nth-of-type(1)>div:nth-of-type(1) {
     max-width: 1500px !important;
     margin: 0 auto !important;
+    padding-bottom: 1rem !important;
 }
 
 h1,
