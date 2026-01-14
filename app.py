@@ -5,7 +5,32 @@ import json
 import time
 
 # Early Page Config for faster initial render
-st.set_page_config(page_title="SAA-C03 Prep", page_icon="☁️", layout="wide", initial_sidebar_state="collapsed")
+st.write('<style>div.block-container{padding-top:2rem;}</style>', unsafe_allow_html=True) # Minimize top padding
+st.set_page_config(
+    page_title="AWS Certified Solutions Architect Associate (SAA-C03)", 
+    page_icon="☁️", 
+    layout="wide", 
+    initial_sidebar_state="collapsed"
+)
+
+# SEO Injection
+st.markdown("""
+    <script>
+        document.title = "AWS Certified Solutions Architect Associate (SAA-C03)";
+        
+        // Add Meta Description
+        var metaDesc = document.createElement('meta');
+        metaDesc.name = "description";
+        metaDesc.content = "Luyện thi chứng chỉ AWS Certified Solutions Architect Associate (SAA-C03) miễn phí với bộ câu hỏi trắc nghiệm đầy đủ, giải thích chi tiết từ AI và chế độ ôn tập thông minh.";
+        document.getElementsByTagName('head')[0].appendChild(metaDesc);
+
+        // Add Meta Keywords
+        var metaKeywords = document.createElement('meta');
+        metaKeywords.name = "keywords";
+        metaKeywords.content = "AWS, SAA-C03, Solutions Architect, Exam Prep, Trắc nghiệm AWS, Cloud Computing, Luyện thi AWS miễn phí";
+        document.getElementsByTagName('head')[0].appendChild(metaKeywords);
+    </script>
+""", unsafe_allow_html=True)
 
 from pathlib import Path
 from quiz_parser import parse_markdown_file
@@ -299,6 +324,13 @@ def main():
     q = questions[real_idx]
     
     # UI Render
+    # Main Page Title
+    st.markdown("""
+        <h1 style="text-align: center; color: #232f3e; margin-bottom: 2rem; font-size: 2.2rem;">
+            AWS Certified Solutions Architect Associate (SAA-C03)
+        </h1>
+    """, unsafe_allow_html=True)
+
     st.markdown(f"""
 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
     <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -378,14 +410,29 @@ def main():
                     </div>
                 ''', unsafe_allow_html=True)
             
-        # Javascript for auto-scroll
+        # Javascript for auto-scroll with Retry
         st.markdown("""
             <script>
-            function scrollToElement(id) {
-                const element = window.parent.document.getElementById(id);
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
+            function scrollToElementWithRetry(id) {
+                let attempts = 0;
+                const maxAttempts = 20; // Try for 2 seconds (100ms * 20)
+                
+                const interval = setInterval(() => {
+                    // Try finding in current doc (if inline) or parent (if iframe)
+                    let element = document.getElementById(id) || window.parent.document.getElementById(id);
+                    
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        clearInterval(interval);
+                        console.log("Scrolled to " + id);
+                    } else {
+                        attempts++;
+                        if (attempts >= maxAttempts) {
+                            clearInterval(interval);
+                            console.log("Could not find element " + id + " after " + maxAttempts + " attempts");
+                        }
+                    }
+                }, 100);
             }
             </script>
         """, unsafe_allow_html=True)
@@ -400,7 +447,7 @@ def main():
                 
                 # Auto-scroll if just triggered
                 if explain_req:
-                    st.markdown(f'<script>scrollToElement("explanation-{q["id"]}");</script>', unsafe_allow_html=True)
+                    st.markdown(f'<script>scrollToElementWithRetry("explanation-{q["id"]}");</script>', unsafe_allow_html=True)
 
         # Display Theory Section (Always Bottom)
         if q['id'] in st.session_state.theories:
@@ -410,7 +457,7 @@ def main():
                 
                 # Auto-scroll if just triggered
                 if theory_req:
-                     st.markdown(f'<script>scrollToElement("theory-{q["id"]}");</script>', unsafe_allow_html=True)
+                     st.markdown(f'<script>scrollToElementWithRetry("theory-{q["id"]}");</script>', unsafe_allow_html=True)
 
     # Nav
     st.divider()
