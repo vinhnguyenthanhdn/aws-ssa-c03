@@ -1,7 +1,11 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import random
-import google.generativeai as genai
+import json
+import time
+
+# Early Page Config for faster initial render
+st.set_page_config(page_title="SAA-C03 Prep", page_icon="☁️", layout="wide", initial_sidebar_state="collapsed")
 
 from pathlib import Path
 from quiz_parser import parse_markdown_file
@@ -18,6 +22,7 @@ elif "GOOGLE_API_KEY" in st.secrets:
     API_KEYS = [st.secrets["GOOGLE_API_KEY"]]
 
 def configure_genai():
+    import google.generativeai as genai
     if not API_KEYS: return False
     # Ensure key index exists
     if "api_key_index" not in st.session_state:
@@ -34,7 +39,7 @@ def rotate_key():
 
 # Initial config
 if "api_key_index" not in st.session_state: st.session_state.api_key_index = 0
-configure_genai()
+# configure_genai() # Removed: Lazy init when needed
 
 CACHE_FILE = Path(__file__).parent / "ai_cache.json"
 
@@ -71,7 +76,8 @@ def get_ai_explanation(question, options, correct_answer, question_id):
     for attempt in range(max_retries):
         try:
             configure_genai() # Ensure current key is set
-            model = genai.GenerativeModel('gemini-3-flash-preview')
+            import google.generativeai as genai
+            model = genai.GenerativeModel('gemini-1.5-flash')
             prompt = f"""
             Bạn là chuyên gia AWS SAA-C03. Nhiệm vụ của bạn là phân tích câu hỏi trắc nghiệm này để giải thích cho học viên.
     
@@ -115,7 +121,8 @@ def get_ai_theory(question, options, question_id):
     for attempt in range(max_retries):
         try:
             configure_genai()
-            model = genai.GenerativeModel('gemini-3-flash-preview')
+            import google.generativeai as genai
+            model = genai.GenerativeModel('gemini-1.5-flash')
             prompt = f"""
             Bạn là từ điển sống về AWS. Hãy giải thích ngắn gọn các **Dịch vụ** hoặc **Khái niệm** AWS xuất hiện trong văn bản sau:
     
@@ -140,7 +147,7 @@ def get_ai_theory(question, options, question_id):
                 continue
             return f"⚠ Lỗi tải lý thuyết: {str(e)}"
 
-st.set_page_config(page_title="SAA-C03 Prep", page_icon="☁️", layout="wide", initial_sidebar_state="collapsed")
+
 
 # Load CSS
 with open(Path(__file__).parent / "style.css") as f:
@@ -196,6 +203,7 @@ st.markdown("""
     </script>
 """, unsafe_allow_html=True)
 
+@st.cache_data
 def load_data():
     """Handles file loading logic."""
     fpath = Path(__file__).parent / "SAA_C03.md"
@@ -370,17 +378,39 @@ def main():
                     </div>
                 ''', unsafe_allow_html=True)
             
-        # AI Analysis Section (Only show if explanation exists)
+        # Javascript for auto-scroll
+        st.markdown("""
+            <script>
+            function scrollToElement(id) {
+                const element = window.parent.document.getElementById(id);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+            </script>
+        """, unsafe_allow_html=True)
+
+        # AI Analysis Section (Always Top)
         if q['id'] in st.session_state.explanations:
+            st.markdown(f'<div id="explanation-{q["id"]}"></div>', unsafe_allow_html=True) # Anchor
             with st.expander("🤖 Phân Tích (AI Teacher)", expanded=True):
                 st.markdown(st.session_state.explanations[q['id']])
                 if q['discussion_link']: 
                     st.caption(f"[Xem thảo luận gốc trên ExamTopics]({q['discussion_link']})")
+                
+                # Auto-scroll if just triggered
+                if explain_req:
+                    st.markdown(f'<script>scrollToElement("explanation-{q["id"]}");</script>', unsafe_allow_html=True)
 
-        # Display Theory Section (Independent of Answer status)
+        # Display Theory Section (Always Bottom)
         if q['id'] in st.session_state.theories:
+            st.markdown(f'<div id="theory-{q["id"]}"></div>', unsafe_allow_html=True) # Anchor
             with st.expander("📖 Kiến Thức Nền (Concepts)", expanded=True):
                 st.markdown(st.session_state.theories[q['id']])
+                
+                # Auto-scroll if just triggered
+                if theory_req:
+                     st.markdown(f'<script>scrollToElement("theory-{q["id"]}");</script>', unsafe_allow_html=True)
 
     # Nav
     st.divider()
