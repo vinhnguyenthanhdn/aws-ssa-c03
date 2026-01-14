@@ -58,7 +58,7 @@ D. Create and configure an Auto Scaling group to launch private EC2 instances in
 
 E. Migrate the database to an Amazon Aurora MySQL cluster with cross-Region read replicas.
 
-**Answer: BC**
+**Answer: B**
 
 **Timestamp: Aug. 3, 2024, 10:53 a.m.**
 
@@ -391,7 +391,7 @@ Topic #: 1
 [All AWS Certified Solutions Architect - Associate SAA-C03 Questions]
 
 A company wants to create a mobile app that allows users to stream slow-motion video clips on their mobile devices. Currently, the app captures video clips and uploads the video clips in raw format into an Amazon S3 bucket. The app retrieves these video clips directly from the S3 bucket. However, the videos are large in their raw format.Users are experiencing issues with buffering and playback on mobile devices. The company wants to implement solutions to maximize the performance and scalability of the app while minimizing operational overhead.Which combination of solutions will meet these requirements? (Choose two.) 
-Suggested Answer: A 🗳️ 
+Suggested Answer: AC 🗳️ 
 
 A. Deploy Amazon CloudFront for content delivery and caching.
 
@@ -403,7 +403,7 @@ D. Deploy an Auto Sealing group of Amazon EC2 instances in Local Zones for conte
 
 E. Deploy an Auto Scaling group of Amazon EC2 instances to convert the video files to more appropriate formats.
 
-**Answer: A**
+**Answer: AC**
 
 **Timestamp: Feb. 17, 2023, 7:36 p.m.**
 
