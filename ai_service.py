@@ -75,7 +75,7 @@ def get_ai_explanation(question, options, correct_answer, question_id, lang="vi"
         try:
             configure_genai()  # Ensure current key is set
             import google.generativeai as genai
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-3-flash-preview')
             
             # Build prompt using translations
             t = lambda key: get_text(lang, key)
@@ -128,7 +128,7 @@ def get_ai_theory(question, options, question_id, lang="vi"):
         try:
             configure_genai()
             import google.generativeai as genai
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-3-flash-preview')
             
             # Build prompt using translations
             t = lambda key: get_text(lang, key)
