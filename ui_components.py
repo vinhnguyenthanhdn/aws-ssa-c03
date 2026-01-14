@@ -73,17 +73,25 @@ def render_answer_feedback(ans, correct_answer):
     """Render success or error message for user answer."""
     # UI always in English
     t = lambda key: get_text('en', key)
-    correct = ans == (correct_answer or "")
+    
+    clean_ans = (ans or "").strip()
+    clean_correct = (correct_answer or "").strip()
+    
+    correct = clean_ans == clean_correct
+    
     if correct:
         st.markdown(f'''
             <div class="success-msg">
-                <span style="margin-left: 0.5rem;">{t('correct')} <strong>{ans}</strong></span>
+                <span style="margin-left: 0.5rem;">{t('correct')} <strong>{clean_ans}</strong></span>
             </div>
         ''', unsafe_allow_html=True)
     else:
         st.markdown(f'''
             <div class="error-msg">
-                <span style="margin-left: 0.5rem;">{t('incorrect')} <strong>{ans}</strong></span>
+                <span style="margin-left: 0.5rem;">
+                    {t('incorrect')} <strong>{clean_ans}</strong>. 
+                    Correct answer: <strong>{clean_correct}</strong>
+                </span>
             </div>
         ''', unsafe_allow_html=True)
 
