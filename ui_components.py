@@ -37,7 +37,7 @@ def render_page_header():
     """Render the main page title."""
     st.markdown("""
         <h1 style="text-align: center; color: #232f3e; margin-top: 0; margin-bottom: 2rem; font-size: 2.2rem;">
-            AWS Certified Solutions Architect Associate (SAA-C03)
+            AWS Certified Solutions Architect Associate Prep (SAA-C03)
         </h1>
     """, unsafe_allow_html=True)
 
