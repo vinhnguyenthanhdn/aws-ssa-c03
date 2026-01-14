@@ -1,232 +1,23 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import random
 import json
-import time
-
-# Early Page Config for faster initial render
-st.write('<style>div.block-container{padding-top:0rem;}</style>', unsafe_allow_html=True) # Minimize top padding
-st.set_page_config(
-    page_title="AWS Certified Solutions Architect Associate (SAA-C03)", 
-    page_icon="☁️", 
-    layout="wide", 
-    initial_sidebar_state="collapsed"
-)
-
-# SEO Injection
-st.markdown("""
-    <script>
-        document.title = "AWS Certified Solutions Architect Associate (SAA-C03)";
-        
-        // Add Meta Description
-        var metaDesc = document.createElement('meta');
-        metaDesc.name = "description";
-        metaDesc.content = "Luyện thi chứng chỉ AWS Certified Solutions Architect Associate (SAA-C03) miễn phí với bộ câu hỏi trắc nghiệm đầy đủ, giải thích chi tiết từ AI và chế độ ôn tập thông minh.";
-        document.getElementsByTagName('head')[0].appendChild(metaDesc);
-
-        // Add Meta Keywords
-        var metaKeywords = document.createElement('meta');
-        metaKeywords.name = "keywords";
-        metaKeywords.content = "AWS, SAA-C03, Solutions Architect, Exam Prep, Trắc nghiệm AWS, Cloud Computing, Luyện thi AWS miễn phí";
-        document.getElementsByTagName('head')[0].appendChild(metaKeywords);
-    </script>
-""", unsafe_allow_html=True)
-
 from pathlib import Path
+
+# Import custom modules
+from config import setup_page_config, inject_seo, hide_streamlit_branding, load_custom_css
+from ai_service import init_ai_session_state, get_ai_explanation, get_ai_theory
+from ui_components import (
+    render_page_header, render_question_header, render_question_card,
+    render_answer_feedback, render_auto_scroll_script, render_ai_explanation,
+    render_ai_theory, render_navigation_buttons, render_sidebar_tools
+)
 from quiz_parser import parse_markdown_file
-from streamlit_local_storage import LocalStorage
-import json
 
-import time
-
-# Configure Gemini Keys
-API_KEYS = []
-if "GOOGLE_API_KEYS" in st.secrets:
-    API_KEYS = [k.strip() for k in st.secrets["GOOGLE_API_KEYS"].split(",")]
-elif "GOOGLE_API_KEY" in st.secrets:
-    API_KEYS = [st.secrets["GOOGLE_API_KEY"]]
-
-def configure_genai():
-    import google.generativeai as genai
-    if not API_KEYS: return False
-    # Ensure key index exists
-    if "api_key_index" not in st.session_state:
-        st.session_state.api_key_index = 0
-    
-    current_key = API_KEYS[st.session_state.api_key_index % len(API_KEYS)]
-    genai.configure(api_key=current_key)
-    return True
-
-def rotate_key():
-    if not API_KEYS: return
-    st.session_state.api_key_index = (st.session_state.api_key_index + 1) % len(API_KEYS)
-    configure_genai()
-
-# Initial config
-if "api_key_index" not in st.session_state: st.session_state.api_key_index = 0
-# configure_genai() # Removed: Lazy init when needed
-
-CACHE_FILE = Path(__file__).parent / "ai_cache.json"
-
-def load_cache():
-    if not CACHE_FILE.exists():
-        return {"explanations": {}, "theories": {}}
-    try:
-        return json.loads(CACHE_FILE.read_text(encoding='utf-8'))
-    except:
-        return {"explanations": {}, "theories": {}}
-
-def save_cache(data):
-    try:
-        CACHE_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
-    except Exception as e:
-        print(f"Error saving cache: {e}")
-
-def get_cached_content(category, key):
-    data = load_cache()
-    return data.get(category, {}).get(key)
-
-def save_cached_content(category, key, value):
-    data = load_cache()
-    if category not in data: data[category] = {}
-    data[category][key] = value
-    save_cache(data)
-
-def get_ai_explanation(question, options, correct_answer, question_id):
-    # Check cache first
-    cached = get_cached_content("explanations", question_id)
-    if cached: return cached
-
-    max_retries = min(len(API_KEYS) + 2, 6) # Try shifting keys first
-    for attempt in range(max_retries):
-        try:
-            configure_genai() # Ensure current key is set
-            import google.generativeai as genai
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            prompt = f"""
-            Bạn là chuyên gia AWS SAA-C03. Nhiệm vụ của bạn là phân tích câu hỏi trắc nghiệm này để giải thích cho học viên.
-    
-            **Câu hỏi:**
-            {question}
-    
-            **Các lựa chọn:**
-            {options}
-    
-            **Đáp án đúng:** {correct_answer}
-    
-            **Yêu cầu Output (Rất quan trọng):**
-            - **TUYỆT ĐỐI KHÔNG** có lời chào mở đầu (VD: "Chào bạn", "Tôi là chuyên gia...").
-            - **TUYỆT ĐỐI KHÔNG** có lời chúc hay kết luận xã giao ở cuối (VD: "Chúc thi tốt", "Hy vọng giúp ích...").
-            - Chỉ tập trung vào nội dung chuyên môn cô đọng.
-    
-            **Cấu trúc phân tích:**
-            1. **🎯 Phân tích Yêu cầu:** Xác định từ khóa (keywords) và mục tiêu của đề bài.
-            2. **✅ Giải thích đáp án đúng:** Tại sao nó đáp ứng tốt nhất yêu cầu (về kỹ thuật, chi phí, best practice)?
-            3. **❌ Giải thích đáp án sai:** Lí do từng đáp án còn lại không phù hợp.
-            4. **💡 Mẹo nhớ nhanh:** Mapping từ khóa <-> Dịch vụ.
-            """
-            response = model.generate_content(prompt)
-            text = response.text
-            # Save to cache
-            save_cached_content("explanations", question_id, text)
-            return text
-        except Exception as e:
-            if "429" in str(e):
-                # Rotate key and retry
-                rotate_key()
-                continue 
-            return f"⚠ Không thể tải phân tích từ AI. Lỗi: {str(e)}"
-
-def get_ai_theory(question, options, question_id):
-    # Check cache first
-    cached = get_cached_content("theories", question_id)
-    if cached: return cached
-
-    max_retries = min(len(API_KEYS) + 2, 6)
-    for attempt in range(max_retries):
-        try:
-            configure_genai()
-            import google.generativeai as genai
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            prompt = f"""
-            Bạn là từ điển sống về AWS. Hãy giải thích ngắn gọn các **Dịch vụ** hoặc **Khái niệm** AWS xuất hiện trong văn bản sau:
-    
-            **Ngữ cảnh (Câu hỏi & Đáp án):**
-            {question}
-            {options}
-    
-            **Yêu cầu Output:**
-            - Chỉ tập trung vào CÁC KHÁI NIỆM/DỊCH VỤ (VD: AWS Lambda, IOPS, Consistency Model...).
-            - Với mỗi khái niệm: Đưa ra định nghĩa 1 dòng và Use Case chính 1 dòng.
-            - Không giải thích câu hỏi, không phân tích đúng sai.
-            - Trình bày dạng danh sách Markdown sạch sẽ.
-            """
-            response = model.generate_content(prompt)
-            text = response.text
-            # Save to cache
-            save_cached_content("theories", question_id, text)
-            return text
-        except Exception as e:
-            if "429" in str(e):
-                rotate_key()
-                continue
-            return f"⚠ Lỗi tải lý thuyết: {str(e)}"
-
-
-
-# Load CSS
-with open(Path(__file__).parent / "style.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-# Hide Streamlit viewer badge (works on Streamlit Cloud)
-# Hide Streamlit viewer badge (JS injection via markdown for better context access)
-st.markdown("""
-    <script>
-        var observer = new MutationObserver(function(mutations) {
-            var parentDoc = window.parent.document;
-            if (parentDoc) {
-                var newStyle = parentDoc.createElement("style");
-                newStyle.innerHTML = `
-                    ._viewerBadge_nim44_23, 
-                    ._container_gzau3_1._viewerBadge_nim44_23, 
-                    [class*="viewerBadge"], 
-                    header[data-testid="stHeader"],
-                    .stDeployButton,
-                    [data-testid="stToolbar"] {
-                        display: none !important;
-                        visibility: hidden !important;
-                    }
-                `;
-                parentDoc.head.appendChild(newStyle);
-            }
-        });
-        observer.observe(window.parent.document.body, { childList: true, subtree: true });
-        
-        // Initial run
-        try {
-            var parentDoc = window.parent.document;
-            if (parentDoc) {
-                var elements = parentDoc.querySelectorAll('._viewerBadge_nim44_23, [class*="viewerBadge"], [data-testid="stToolbar"]');
-                elements.forEach(el => el.style.display = 'none');
-                
-                // Inject style tag into parent for persistence
-                var style = parentDoc.createElement('style');
-                style.innerHTML = `
-                    ._viewerBadge_nim44_23,
-                    ._container_gzau3_1._viewerBadge_nim44_23,
-                    [class*="viewerBadge"],
-                    .stDeployButton,
-                    [data-testid="stToolbar"] {
-                        display: none !important;
-                    }
-                `;
-                parentDoc.head.appendChild(style);
-            }
-        } catch (e) {
-            console.log("Could not access parent document to hide Streamlit branding: " + e);
-        }
-    </script>
-""", unsafe_allow_html=True)
+# Setup page configuration
+setup_page_config()
+inject_seo()
+hide_streamlit_branding()
+load_custom_css()
 
 @st.cache_data
 def load_data():
@@ -236,21 +27,19 @@ def load_data():
         return fpath.read_text(encoding='utf-8')
     return None
 
-def main():
-    # Initialize Local Storage
-    localS = LocalStorage()
-    
+def init_session_state(localS):
+    """Initialize all session state variables."""
     # Load state from Local Storage/URL if session is fresh
     if 'data_loaded' not in st.session_state:
-        # 1. Restore Index from URL Query Params (Robust against refresh)
+        # Restore Index from URL Query Params
         try:
             qp = st.query_params
             q_idx = int(qp.get("q", 1)) - 1
             st.session_state.current_index = max(0, q_idx)
         except:
-             st.session_state.current_index = 0
+            st.session_state.current_index = 0
              
-        # 2. Restore Answers from Local Storage
+        # Restore Answers from Local Storage
         try:
             saved_ans = localS.getItem("saa_c03_user_answers")
             if saved_ans:
@@ -261,242 +50,220 @@ def main():
         st.session_state.data_loaded = True
 
     # Ensure Session State Initialization
-    if 'current_index' not in st.session_state: st.session_state.current_index = 0
-    if 'user_answers' not in st.session_state: st.session_state.user_answers = {}
-    if 'random_mode' not in st.session_state: st.session_state.random_mode = False
-    if 'question_order' not in st.session_state: st.session_state.question_order = []
+    if 'current_index' not in st.session_state: 
+        st.session_state.current_index = 0
+    if 'user_answers' not in st.session_state: 
+        st.session_state.user_answers = {}
+    if 'random_mode' not in st.session_state: 
+        st.session_state.random_mode = False
+    if 'question_order' not in st.session_state: 
+        st.session_state.question_order = []
+    
+    # Initialize AI session state
+    init_ai_session_state()
 
-    # Sidebar
+def handle_navigation(is_search, idx_ptr, total_indices, total_questions):
+    """Handle navigation button clicks."""
+    def on_prev():
+        if is_search and st.session_state.search_idx > 0:
+            st.session_state.search_idx -= 1
+            st.rerun()
+        elif not is_search and st.session_state.current_index > 0:
+            st.session_state.current_index -= 1
+            st.query_params["q"] = str(st.session_state.current_index + 1)
+            st.rerun()
+    
+    def on_next():
+        if is_search and st.session_state.search_idx < total_indices - 1:
+            st.session_state.search_idx += 1
+            st.rerun()
+        elif not is_search and st.session_state.current_index < total_questions - 1:
+            st.session_state.current_index += 1
+            st.query_params["q"] = str(st.session_state.current_index + 1)
+            st.rerun()
+    
+    def on_jump(new_idx):
+        if is_search:
+            st.session_state.search_idx = new_idx
+        else:
+            st.session_state.current_index = new_idx
+            st.query_params["q"] = str(st.session_state.current_index + 1)
+        st.rerun()
+    
+    render_navigation_buttons(idx_ptr, total_indices, is_search, on_prev, on_next, on_jump)
+
+def handle_sidebar(questions, localS):
+    """Handle sidebar rendering and actions."""
+    total = len(questions)
+    
     with st.sidebar:
-        st.header("⚙️ Settings")
-        content = load_data()
-        if not content:
-            uploaded = st.file_uploader("Upload .md file", type=["md"])
-            if uploaded: content = uploaded.getvalue().decode("utf-8")
-            else: st.stop()
-            
-        questions = parse_markdown_file(content)
-        total = len(questions)
+        search, shuffle_clicked, reset_clicked = render_sidebar_tools(
+            total, 
+            len(st.session_state.user_answers)
+        )
         
-        # Init order
-        if len(st.session_state.question_order) != total:
-            st.session_state.question_order = list(range(total))
-            
-        st.markdown(f"**Total Qs:** {total} | **Done:** {len(st.session_state.user_answers)}")
-        st.progress(min(len(st.session_state.user_answers) / total, 1.0))
-        st.divider()
-        
-        # Tools
-        search = st.text_input("🔍 Search")
-        c1, c2 = st.columns(2)
-        if c1.button("🔀 Shuffle"):
+        # Handle shuffle
+        if shuffle_clicked:
             st.session_state.random_mode = True
             random.shuffle(st.session_state.question_order)
             st.session_state.current_index = 0
             st.rerun()
-        if c2.button("🔄 Reset"):
+        
+        # Handle reset
+        if reset_clicked:
             st.session_state.random_mode = False
             st.session_state.question_order = list(range(total))
             st.session_state.current_index = 0
             st.session_state.user_answers = {}
             st.rerun()
-            
+    
+    return search
 
-
-    # Main Logic
+def get_current_question_index(search, questions):
+    """Determine current question index based on search state."""
     indices = st.session_state.question_order
     is_search = False
     
     if search:
-        indices = [i for i in st.session_state.question_order if search.lower() in questions[i]['question'].lower() or search in questions[i]['id']]
-        if not indices: st.warning("No matches"); st.stop()
+        indices = [
+            i for i in st.session_state.question_order 
+            if search.lower() in questions[i]['question'].lower() 
+            or search in questions[i]['id']
+        ]
+        if not indices:
+            st.warning("No matches")
+            st.stop()
+        
         if 'search_query' not in st.session_state or st.session_state.search_query != search:
-            st.session_state.search_query = search; st.session_state.search_idx = 0
+            st.session_state.search_query = search
+            st.session_state.search_idx = 0
+        
         idx_ptr = st.session_state.search_idx if st.session_state.search_idx < len(indices) else 0
         real_idx = indices[idx_ptr]
         is_search = True
     else:
         idx_ptr = st.session_state.current_index
         real_idx = indices[idx_ptr]
+    
+    return indices, idx_ptr, real_idx, is_search
 
+def render_question_form(q, localS):
+    """Render the question form and handle submissions."""
+    with st.form(key=f"q_{q['id']}"):
+        user_ch = []
+        
+        # Render options
+        if q['is_multiselect']:
+            for opt in q['options']:
+                if st.checkbox(opt):
+                    user_ch.append(opt.split('.')[0])
+        else:
+            sel = st.radio("Select your answer:", q['options'], index=None, label_visibility="collapsed")
+            if sel:
+                user_ch.append(sel.split('.')[0])
+        
+        # Action buttons
+        f1, f2, f3 = st.columns([1, 1, 1])
+        with f1:
+            theory_req = st.form_submit_button("📖 Lý Thuyết", use_container_width=True)
+        with f2:
+            explain_req = st.form_submit_button("🤖 Giải Thích", use_container_width=True)
+        with f3:
+            sub = st.form_submit_button("✓ Submit Answer", type="primary", use_container_width=True)
+    
+    # Handle answer submission
+    if sub and user_ch:
+        ans = "".join(sorted(user_ch))
+        st.session_state.user_answers[q['id']] = ans
+        localS.setItem("saa_c03_user_answers", json.dumps(st.session_state.user_answers))
+    
+    # Handle theory request
+    if theory_req:
+        if q['id'] not in st.session_state.theories:
+            with st.spinner("Đang tổng hợp kiến thức..."):
+                opts_text = "\n".join(q['options'])
+                st.session_state.theories[q['id']] = get_ai_theory(q['question'], opts_text, q['id'])
+    
+    # Handle explanation request
+    if explain_req:
+        if q['id'] not in st.session_state.explanations:
+            with st.spinner("Đang phân tích câu hỏi... (Gemini AI)"):
+                opts_text = "\n".join(q['options'])
+                explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'])
+                st.session_state.explanations[q['id']] = explanation
+    
+    return theory_req, explain_req
 
-
+def main():
+    # Import here to avoid module load errors
+    from streamlit_local_storage import LocalStorage
+    
+    # Initialize Local Storage
+    localS = LocalStorage()
+    init_session_state(localS)
+    
+    # Load questions
+    content = load_data()
+    if not content:
+        with st.sidebar:
+            st.header("⚙️ Settings")
+            uploaded = st.file_uploader("Upload .md file", type=["md"])
+            if uploaded:
+                content = uploaded.getvalue().decode("utf-8")
+            else:
+                st.stop()
+    
+    questions = parse_markdown_file(content)
+    total = len(questions)
+    
+    # Init question order
+    if len(st.session_state.question_order) != total:
+        st.session_state.question_order = list(range(total))
+    
+    # Handle sidebar
+    search = handle_sidebar(questions, localS)
+    
+    # Get current question
+    indices, idx_ptr, real_idx, is_search = get_current_question_index(search, questions)
     q = questions[real_idx]
     
-    # UI Render
-    # Main Page Title
-    st.markdown("""
-        <h1 style="text-align: center; color: #232f3e; margin-top: 0; margin-bottom: 2rem; font-size: 2.2rem;">
-            AWS Certified Solutions Architect Associate (SAA-C03)
-        </h1>
-    """, unsafe_allow_html=True)
-
-    st.markdown(f"""
-<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-    <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <span style="font-size: 1.5rem; font-weight: 700; color: #232f3e;">Question #{idx_ptr+1}</span>
-    </div>
-    <span style="font-size: 0.875rem; color: #64748b; font-weight: 500;">{idx_ptr+1} of {len(indices)}</span>
-</div>
-    """, unsafe_allow_html=True)
+    # Render UI
+    render_page_header()
+    render_question_header(idx_ptr, len(indices))
     
     with st.container():
-        st.markdown(f'<div class="question-card"><div class="question-text">{q["question"].replace(chr(10), "<br>")}</div></div>', unsafe_allow_html=True)
+        render_question_card(q["question"], q['is_multiselect'])
         
-        # Show multi-select hint
-        if q['is_multiselect']:
-            st.markdown('<p style="color: #ff9900; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.5rem;">📌 Select all that apply</p>', unsafe_allow_html=True)
+        # Render form and handle actions
+        theory_req, explain_req = render_question_form(q, localS)
         
-        with st.form(key=f"q_{q['id']}"):
-            user_ch = []
-            if q['is_multiselect']:
-                for opt in q['options']:
-                    if st.checkbox(opt): user_ch.append(opt.split('.')[0])
-            else:
-                sel = st.radio("Select your answer:", q['options'], index=None, label_visibility="collapsed")
-                if sel: user_ch.append(sel.split('.')[0])
-            
-
-            
-            f1, f2, f3 = st.columns([1, 1, 1])
-            with f1:
-                theory_req = st.form_submit_button("📖 Lý Thuyết", use_container_width=True)
-            with f2:
-                explain_req = st.form_submit_button("🤖 Giải Thích", use_container_width=True)
-            with f3:
-                sub = st.form_submit_button("✓ Submit Answer", type="primary", use_container_width=True)
-            
+        # Display answer feedback
         ans = st.session_state.user_answers.get(q['id'])
-        
-        # Init storage
-        if "theories" not in st.session_state: st.session_state.theories = {}
-        if "explanations" not in st.session_state: st.session_state.explanations = {}
-
-        # Handle Answer Submit
-        if sub and user_ch:
-            ans = "".join(sorted(user_ch))
-            st.session_state.user_answers[q['id']] = ans
-            localS.setItem("saa_c03_user_answers", json.dumps(st.session_state.user_answers))
-        
-        
-        # Handle Theory Request
-        if theory_req:
-             if q['id'] not in st.session_state.theories:
-                 with st.spinner("Đang tổng hợp kiến thức..."):
-                     opts_text = "\n".join(q['options'])
-                     st.session_state.theories[q['id']] = get_ai_theory(q['question'], opts_text, q['id'])
-
-        # Handle Explain Request
-        if explain_req:
-            if q['id'] not in st.session_state.explanations:
-                with st.spinner("Đang phân tích câu hỏi... (Gemini AI)"):
-                    opts_text = "\n".join(q['options'])
-                    explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'])
-                    st.session_state.explanations[q['id']] = explanation
-        
-        # Display Results & Content
         if ans:
-            correct = ans == (q['correct_answer'] or "")
-            if correct:
-                st.markdown(f'''
-                    <div class="success-msg">
-                        <span style="margin-left: 0.5rem;">Correct! You answered: <strong>{ans}</strong></span>
-                    </div>
-                ''', unsafe_allow_html=True)
-            else:
-                st.markdown(f'''
-                    <div class="error-msg">
-                        <span style="margin-left: 0.5rem;">Incorrect. You answered: <strong>{ans}</strong></span>
-                    </div>
-                ''', unsafe_allow_html=True)
-            
-        # Javascript for auto-scroll with Retry
-        st.markdown("""
-            <script>
-            function scrollToElementWithRetry(id) {
-                let attempts = 0;
-                const maxAttempts = 20; // Try for 2 seconds (100ms * 20)
-                
-                const interval = setInterval(() => {
-                    // Try finding in current doc (if inline) or parent (if iframe)
-                    let element = document.getElementById(id) || window.parent.document.getElementById(id);
-                    
-                    if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        clearInterval(interval);
-                        console.log("Scrolled to " + id);
-                    } else {
-                        attempts++;
-                        if (attempts >= maxAttempts) {
-                            clearInterval(interval);
-                            console.log("Could not find element " + id + " after " + maxAttempts + " attempts");
-                        }
-                    }
-                }, 100);
-            }
-            </script>
-        """, unsafe_allow_html=True)
-
-        # AI Analysis Section (Always Top)
+            render_answer_feedback(ans, q['correct_answer'])
+        
+        # Render auto-scroll script
+        render_auto_scroll_script()
+        
+        # Display AI explanation
         if q['id'] in st.session_state.explanations:
-            st.markdown(f'<div id="explanation-{q["id"]}"></div>', unsafe_allow_html=True) # Anchor
-            with st.expander("🤖 Phân Tích (AI Teacher)", expanded=True):
-                st.markdown(st.session_state.explanations[q['id']])
-                if q['discussion_link']: 
-                    st.caption(f"[Xem thảo luận gốc trên ExamTopics]({q['discussion_link']})")
-                
-                # Auto-scroll if just triggered
-                if explain_req:
-                    st.markdown(f'<script>scrollToElementWithRetry("explanation-{q["id"]}");</script>', unsafe_allow_html=True)
-
-        # Display Theory Section (Always Bottom)
+            render_ai_explanation(
+                q['id'],
+                st.session_state.explanations[q['id']],
+                q.get('discussion_link'),
+                auto_scroll=explain_req
+            )
+        
+        # Display AI theory
         if q['id'] in st.session_state.theories:
-            st.markdown(f'<div id="theory-{q["id"]}"></div>', unsafe_allow_html=True) # Anchor
-            with st.expander("📖 Kiến Thức Nền (Concepts)", expanded=True):
-                st.markdown(st.session_state.theories[q['id']])
-                
-                # Auto-scroll if just triggered
-                if theory_req:
-                     st.markdown(f'<script>scrollToElementWithRetry("theory-{q["id"]}");</script>', unsafe_allow_html=True)
-
-    # Nav
-    st.divider()
-    c1, c2, c3 = st.columns([1, 2, 1])
+            render_ai_theory(
+                q['id'],
+                st.session_state.theories[q['id']],
+                auto_scroll=theory_req
+            )
     
-    with c1:
-        if st.button("⬅️ Previous", use_container_width=True):
-            if is_search and st.session_state.search_idx > 0: st.session_state.search_idx -= 1; st.rerun()
-            elif not is_search and st.session_state.current_index > 0: 
-                st.session_state.current_index -= 1
-                st.query_params["q"] = str(st.session_state.current_index + 1)
-                st.rerun()
-            
-    with c2:
-        jc1, jc2 = st.columns([3, 1], gap="small")
-        with jc1:
-            # Direct input triggering rerun on Enter
-            new_val = st.number_input("Go to Question #", min_value=1, max_value=len(indices), value=idx_ptr+1, label_visibility="collapsed")
-            if new_val != idx_ptr+1:
-                 if is_search:
-                     st.session_state.search_idx = new_val - 1
-                 else:
-                     st.session_state.current_index = new_val - 1
-                     st.query_params["q"] = str(st.session_state.current_index + 1)
-                 st.rerun()
-                 
-        with jc2:
-            if st.button("Go", use_container_width=True):
-                # Button essentially acts as a confirm or refresh if they didn't hit enter
-                # Logic is handled by number_input update mostly, but this ensures explicit action works
-                pass
-                    
-    with c3:
-        if st.button("Next ➡️", use_container_width=True):
-            if is_search and st.session_state.search_idx < len(indices)-1: st.session_state.search_idx += 1; st.rerun()
-            elif not is_search and st.session_state.current_index < len(questions)-1: 
-                st.session_state.current_index += 1
-                st.query_params["q"] = str(st.session_state.current_index + 1)
-                st.rerun()
+    # Navigation
+    handle_navigation(is_search, idx_ptr, len(indices), total)
 
 if __name__ == "__main__":
     main()
