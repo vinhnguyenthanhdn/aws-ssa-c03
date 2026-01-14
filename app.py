@@ -9,7 +9,8 @@ from ai_service import init_ai_session_state, get_ai_explanation, get_ai_theory
 from ui_components import (
     render_page_header, render_question_header, render_question_card,
     render_answer_feedback, render_auto_scroll_script, render_ai_explanation,
-    render_ai_theory, render_navigation_buttons, render_sidebar_tools
+    render_ai_theory, render_navigation_buttons, render_sidebar_tools,
+    render_language_selector
 )
 from quiz_parser import parse_markdown_file
 
@@ -60,6 +61,8 @@ def init_session_state(localS):
         st.session_state.question_order = []
     if 'active_ai_section' not in st.session_state:
         st.session_state.active_ai_section = None  # Can be 'theory', 'explanation', or None
+    if 'language' not in st.session_state:
+        st.session_state.language = 'vi'  # Default to Vietnamese
     
     # Initialize AI session state
     init_ai_session_state()
@@ -133,7 +136,9 @@ def get_current_question_index(search, questions):
             or search in questions[i]['id']
         ]
         if not indices:
-            st.warning("No matches")
+            from translations import get_text
+            lang = st.session_state.get('language', 'vi')
+            st.warning(get_text(lang, 'no_matches'))
             st.stop()
         
         if 'search_query' not in st.session_state or st.session_state.search_query != search:
@@ -151,6 +156,11 @@ def get_current_question_index(search, questions):
 
 def render_question_form(q, localS):
     """Render the question form and handle submissions."""
+    # Get language and translations at the beginning
+    from translations import get_text
+    lang = st.session_state.get('language', 'vi')
+    t = lambda key: get_text(lang, key)
+    
     with st.form(key=f"q_{q['id']}"):
         user_ch = []
         
@@ -160,18 +170,20 @@ def render_question_form(q, localS):
                 if st.checkbox(opt):
                     user_ch.append(opt.split('.')[0])
         else:
-            sel = st.radio("Select your answer:", q['options'], index=None, label_visibility="collapsed")
+            sel = st.radio(t('select_answer'), q['options'], index=None, label_visibility="collapsed")
             if sel:
                 user_ch.append(sel.split('.')[0])
         
+        
         # Action buttons
         f1, f2, f3 = st.columns([1, 1, 1])
+        
         with f1:
-            theory_req = st.form_submit_button("📖 Lý Thuyết", use_container_width=True)
+            theory_req = st.form_submit_button(t('btn_theory'), use_container_width=True)
         with f2:
-            explain_req = st.form_submit_button("🤖 Giải Thích", use_container_width=True)
+            explain_req = st.form_submit_button(t('btn_explain'), use_container_width=True)
         with f3:
-            sub = st.form_submit_button("✓ Submit Answer", type="primary", use_container_width=True)
+            sub = st.form_submit_button(t('btn_submit'), type="primary", use_container_width=True)
     
     # Handle answer submission
     if sub and user_ch:
@@ -179,21 +191,26 @@ def render_question_form(q, localS):
         st.session_state.user_answers[q['id']] = ans
         localS.setItem("saa_c03_user_answers", json.dumps(st.session_state.user_answers))
     
+    # Get current language
+    lang = st.session_state.get('language', 'vi')
+    from translations import get_text
+    t = lambda key: get_text(lang, key)
+    
     # Handle theory request
     if theory_req:
         if q['id'] not in st.session_state.theories:
-            with st.spinner("Đang tổng hợp kiến thức..."):
+            with st.spinner(t('loading_theory')):
                 opts_text = "\n".join(q['options'])
-                st.session_state.theories[q['id']] = get_ai_theory(q['question'], opts_text, q['id'])
+                st.session_state.theories[q['id']] = get_ai_theory(q['question'], opts_text, q['id'], lang)
         # Set active section to theory, hide explanation
         st.session_state.active_ai_section = 'theory'
     
     # Handle explanation request
     if explain_req:
         if q['id'] not in st.session_state.explanations:
-            with st.spinner("Đang phân tích câu hỏi... (Gemini AI)"):
+            with st.spinner(t('loading_explanation')):
                 opts_text = "\n".join(q['options'])
-                explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'])
+                explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'], lang)
                 st.session_state.explanations[q['id']] = explanation
         # Set active section to explanation, hide theory
         st.session_state.active_ai_section = 'explanation'
@@ -210,10 +227,13 @@ def main():
     
     # Load questions
     content = load_data()
+    from translations import get_text
+    lang = st.session_state.get('language', 'vi')
+    
     if not content:
         with st.sidebar:
-            st.header("⚙️ Settings")
-            uploaded = st.file_uploader("Upload .md file", type=["md"])
+            st.header(get_text(lang, 'settings'))
+            uploaded = st.file_uploader(get_text(lang, 'upload_file'), type=["md"])
             if uploaded:
                 content = uploaded.getvalue().decode("utf-8")
             else:
@@ -234,6 +254,7 @@ def main():
     q = questions[real_idx]
     
     # Render UI
+    render_language_selector()  # Add language selector at the top
     render_page_header()
     render_question_header(idx_ptr, len(indices))
     

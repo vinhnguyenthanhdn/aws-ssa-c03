@@ -1,6 +1,7 @@
 import streamlit as st
 import json
 from pathlib import Path
+from translations import get_text
 
 # Configure Gemini Keys
 API_KEYS = []
@@ -61,10 +62,11 @@ def save_cached_content(category, key, value):
     data[category][key] = value
     save_cache(data)
 
-def get_ai_explanation(question, options, correct_answer, question_id):
+def get_ai_explanation(question, options, correct_answer, question_id, lang="vi"):
     """Get AI explanation for a question answer."""
     # Check cache first
-    cached = get_cached_content("explanations", question_id)
+    cache_key = f"{question_id}_{lang}"
+    cached = get_cached_content("explanations", cache_key)
     if cached: 
         return cached
 
@@ -74,32 +76,35 @@ def get_ai_explanation(question, options, correct_answer, question_id):
             configure_genai()  # Ensure current key is set
             import google.generativeai as genai
             model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            # Build prompt using translations
+            t = lambda key: get_text(lang, key)
             prompt = f"""
-            Bạn là chuyên gia AWS SAA-C03. Nhiệm vụ của bạn là phân tích câu hỏi trắc nghiệm này để giải thích cho học viên.
+            {t('ai_expert_intro')}
     
-            **Câu hỏi:**
+            {t('ai_question_label')}
             {question}
     
-            **Các lựa chọn:**
+            {t('ai_options_label')}
             {options}
     
-            **Đáp án đúng:** {correct_answer}
+            {t('ai_correct_answer_label')} {correct_answer}
     
-            **Yêu cầu Output (Rất quan trọng):**
-            - **TUYỆT ĐỐI KHÔNG** có lời chào mở đầu (VD: "Chào bạn", "Tôi là chuyên gia...").
-            - **TUYỆT ĐỐI KHÔNG** có lời chúc hay kết luận xã giao ở cuối (VD: "Chúc thi tốt", "Hy vọng giúp ích...").
-            - Chỉ tập trung vào nội dung chuyên môn cô đọng.
+            {t('ai_output_requirements')}
+            {t('ai_no_greeting')}
+            {t('ai_no_conclusion')}
+            {t('ai_focus_content')}
     
-            **Cấu trúc phân tích:**
-            1. **🎯 Phân tích Yêu cầu:** Xác định từ khóa (keywords) và mục tiêu của đề bài.
-            2. **✅ Giải thích đáp án đúng:** Tại sao nó đáp ứng tốt nhất yêu cầu (về kỹ thuật, chi phí, best practice)?
-            3. **❌ Giải thích đáp án sai:** Lí do từng đáp án còn lại không phù hợp.
-            4. **💡 Mẹo nhớ nhanh:** Mapping từ khóa <-> Dịch vụ.
+            {t('ai_structure_label')}
+            {t('ai_structure_1')}
+            {t('ai_structure_2')}
+            {t('ai_structure_3')}
+            {t('ai_structure_4')}
             """
             response = model.generate_content(prompt)
             text = response.text
             # Save to cache
-            save_cached_content("explanations", question_id, text)
+            save_cached_content("explanations", cache_key, text)
             return text
         except Exception as e:
             if "429" in str(e):
@@ -110,10 +115,11 @@ def get_ai_explanation(question, options, correct_answer, question_id):
     
     return "⚠ Không thể tải phân tích từ AI sau nhiều lần thử."
 
-def get_ai_theory(question, options, question_id):
+def get_ai_theory(question, options, question_id, lang="vi"):
     """Get AI theory explanation for AWS concepts in question."""
     # Check cache first
-    cached = get_cached_content("theories", question_id)
+    cache_key = f"{question_id}_{lang}"
+    cached = get_cached_content("theories", cache_key)
     if cached: 
         return cached
 
@@ -123,23 +129,28 @@ def get_ai_theory(question, options, question_id):
             configure_genai()
             import google.generativeai as genai
             model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            # Build prompt using translations
+            t = lambda key: get_text(lang, key)
             prompt = f"""
-            Bạn là từ điển sống về AWS. Hãy giải thích ngắn gọn các **Dịch vụ** hoặc **Khái niệm** AWS xuất hiện trong văn bản sau:
+            {t('ai_theory_intro')} 
+            
+            {t('ai_theory_header')}
     
-            **Ngữ cảnh (Câu hỏi & Đáp án):**
+            {t('ai_theory_context')}
             {question}
             {options}
     
-            **Yêu cầu Output:**
-            - Chỉ tập trung vào CÁC KHÁI NIỆM/DỊCH VỤ (VD: AWS Lambda, IOPS, Consistency Model...).
-            - Với mỗi khái niệm: Đưa ra định nghĩa 1 dòng và Use Case chính 1 dòng.
-            - Không giải thích câu hỏi, không phân tích đúng sai.
-            - Trình bày dạng danh sách Markdown sạch sẽ.
+            {t('ai_theory_requirements')}
+            {t('ai_theory_req_1')}
+            {t('ai_theory_req_2')}
+            {t('ai_theory_req_3')}
+            {t('ai_theory_req_4')}
             """
             response = model.generate_content(prompt)
             text = response.text
             # Save to cache
-            save_cached_content("theories", question_id, text)
+            save_cached_content("theories", cache_key, text)
             return text
         except Exception as e:
             if "429" in str(e):
