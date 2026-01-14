@@ -95,10 +95,12 @@ def get_current_question_index(questions):
 
 def render_question_form(q, localS):
     """Render the question form and handle submissions."""
-    # Get language and translations at the beginning
+    # Get language for AI generation (User preference)
+    ai_lang = st.session_state.get('language', 'vi')
+    
+    # UI always in English
     from translations import get_text
-    lang = st.session_state.get('language', 'vi')
-    t = lambda key: get_text(lang, key)
+    t = lambda key: get_text('en', key)
     
     with st.form(key=f"q_{q['id']}"):
         user_ch = []
@@ -130,14 +132,9 @@ def render_question_form(q, localS):
         st.session_state.user_answers[q['id']] = ans
         localS.setItem("saa_c03_user_answers", json.dumps(st.session_state.user_answers))
     
-    # Get current language
-    lang = st.session_state.get('language', 'vi')
-    from translations import get_text
-    t = lambda key: get_text(lang, key)
-    
-    # Create cache keys that include language
-    theory_cache_key = f"{q['id']}_{lang}"
-    explanation_cache_key = f"{q['id']}_{lang}"
+    # Create cache keys that include language (so user can switch lang and get new content)
+    theory_cache_key = f"{q['id']}_{ai_lang}"
+    explanation_cache_key = f"{q['id']}_{ai_lang}"
     
     # Handle theory request
     if theory_req:
@@ -146,7 +143,7 @@ def render_question_form(q, localS):
             if theory_cache_key not in st.session_state.theories:
                 # Not cached - fetch from AI
                 opts_text = "\n".join(q['options'])
-                st.session_state.theories[theory_cache_key] = get_ai_theory(q['question'], opts_text, q['id'], lang)
+                st.session_state.theories[theory_cache_key] = get_ai_theory(q['question'], opts_text, q['id'], ai_lang)
             
             # Ensure minimum 2s loading time for UX consistency
             elapsed = time.time() - start_time
@@ -163,7 +160,7 @@ def render_question_form(q, localS):
             if explanation_cache_key not in st.session_state.explanations:
                 # Not cached - fetch from AI
                 opts_text = "\n".join(q['options'])
-                explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'], lang)
+                explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'], ai_lang)
                 st.session_state.explanations[explanation_cache_key] = explanation
             
             # Ensure minimum 2s loading time for UX consistency
@@ -187,11 +184,11 @@ def main():
     # Load questions
     content = load_data()
     from translations import get_text
-    lang = st.session_state.get('language', 'vi')
     
     if not content:
-        st.header(get_text(lang, 'settings'))
-        uploaded = st.file_uploader(get_text(lang, 'upload_file'), type=["md"])
+        # UI English
+        st.header(get_text('en', 'settings'))
+        uploaded = st.file_uploader(get_text('en', 'upload_file'), type=["md"])
         if uploaded:
             content = uploaded.getvalue().decode("utf-8")
         else:

@@ -43,8 +43,8 @@ def render_page_header():
 
 def render_question_header(idx_ptr, total):
     """Render question number and progress."""
-    lang = st.session_state.get('language', 'vi')
-    t = lambda key: get_text(lang, key)
+    # UI always in English
+    t = lambda key: get_text('en', key)
     st.markdown(f"""
 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
     <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -56,8 +56,8 @@ def render_question_header(idx_ptr, total):
 
 def render_question_card(question_text, is_multiselect=False):
     """Render question text card."""
-    lang = st.session_state.get('language', 'vi')
-    t = lambda key: get_text(lang, key)
+    # UI always in English
+    t = lambda key: get_text('en', key)
     st.markdown(
         f'<div class="question-card"><div class="question-text">{question_text.replace(chr(10), "<br>")}</div></div>', 
         unsafe_allow_html=True
@@ -71,8 +71,8 @@ def render_question_card(question_text, is_multiselect=False):
 
 def render_answer_feedback(ans, correct_answer):
     """Render success or error message for user answer."""
-    lang = st.session_state.get('language', 'vi')
-    t = lambda key: get_text(lang, key)
+    # UI always in English
+    t = lambda key: get_text('en', key)
     correct = ans == (correct_answer or "")
     if correct:
         st.markdown(f'''
@@ -117,8 +117,8 @@ def render_auto_scroll_script():
 
 def render_ai_explanation(question_id, explanation_text, discussion_link=None, auto_scroll=False):
     """Render AI explanation section with optional auto-scroll."""
-    lang = st.session_state.get('language', 'vi')
-    t = lambda key: get_text(lang, key)
+    # UI always in English
+    t = lambda key: get_text('en', key)
     st.markdown(f'<div id="explanation-{question_id}"></div>', unsafe_allow_html=True)
     with st.expander(t('ai_analysis_title'), expanded=True):
         st.markdown(explanation_text)
@@ -130,8 +130,8 @@ def render_ai_explanation(question_id, explanation_text, discussion_link=None, a
 
 def render_ai_theory(question_id, theory_text, auto_scroll=False):
     """Render AI theory section with optional auto-scroll."""
-    lang = st.session_state.get('language', 'vi')
-    t = lambda key: get_text(lang, key)
+    # UI always in English
+    t = lambda key: get_text('en', key)
     st.markdown(f'<div id="theory-{question_id}"></div>', unsafe_allow_html=True)
     with st.expander(t('ai_theory_title'), expanded=True):
         st.markdown(theory_text)
@@ -141,8 +141,8 @@ def render_ai_theory(question_id, theory_text, auto_scroll=False):
 
 def render_navigation_buttons(idx_ptr, total, on_prev, on_next, on_jump):
     """Render navigation buttons (Previous, Jump, Next)."""
-    lang = st.session_state.get('language', 'vi')
-    t = lambda key: get_text(lang, key)
+    # UI always in English
+    t = lambda key: get_text('en', key)
     st.divider()
     c1, c2, c3 = st.columns([1, 2, 1])
     
@@ -151,7 +151,7 @@ def render_navigation_buttons(idx_ptr, total, on_prev, on_next, on_jump):
             on_prev()
             
     with c2:
-        jc1, jc2 = st.columns([3, 1], gap="small")
+        jc1, jc2 = st.columns([2, 1])
         with jc1:
             new_val = st.number_input(
                 t('go_to_question'), 
