@@ -1,5 +1,4 @@
 import streamlit as st
-import random
 import json
 from pathlib import Path
 
@@ -9,8 +8,7 @@ from ai_service import init_ai_session_state, get_ai_explanation, get_ai_theory
 from ui_components import (
     render_page_header, render_question_header, render_question_card,
     render_answer_feedback, render_auto_scroll_script, render_ai_explanation,
-    render_ai_theory, render_navigation_buttons, render_sidebar_tools,
-    render_language_selector
+    render_ai_theory, render_navigation_buttons, render_language_selector
 )
 from quiz_parser import parse_markdown_file
 
@@ -55,8 +53,6 @@ def init_session_state(localS):
         st.session_state.current_index = 0
     if 'user_answers' not in st.session_state: 
         st.session_state.user_answers = {}
-    if 'random_mode' not in st.session_state: 
-        st.session_state.random_mode = False
     if 'question_order' not in st.session_state: 
         st.session_state.question_order = []
     if 'active_ai_section' not in st.session_state:
@@ -67,92 +63,34 @@ def init_session_state(localS):
     # Initialize AI session state
     init_ai_session_state()
 
-def handle_navigation(is_search, idx_ptr, total_indices, total_questions):
+def handle_navigation(idx_ptr, total_indices, total_questions):
     """Handle navigation button clicks."""
     def on_prev():
-        if is_search and st.session_state.search_idx > 0:
-            st.session_state.search_idx -= 1
-            st.rerun()
-        elif not is_search and st.session_state.current_index > 0:
+        if st.session_state.current_index > 0:
             st.session_state.current_index -= 1
             st.query_params["q"] = str(st.session_state.current_index + 1)
             st.rerun()
     
     def on_next():
-        if is_search and st.session_state.search_idx < total_indices - 1:
-            st.session_state.search_idx += 1
-            st.rerun()
-        elif not is_search and st.session_state.current_index < total_questions - 1:
+        if st.session_state.current_index < total_questions - 1:
             st.session_state.current_index += 1
             st.query_params["q"] = str(st.session_state.current_index + 1)
             st.rerun()
     
     def on_jump(new_idx):
-        if is_search:
-            st.session_state.search_idx = new_idx
-        else:
-            st.session_state.current_index = new_idx
-            st.query_params["q"] = str(st.session_state.current_index + 1)
+        st.session_state.current_index = new_idx
+        st.query_params["q"] = str(st.session_state.current_index + 1)
         st.rerun()
     
-    render_navigation_buttons(idx_ptr, total_indices, is_search, on_prev, on_next, on_jump)
+    render_navigation_buttons(idx_ptr, total_indices, on_prev, on_next, on_jump)
 
-def handle_tools(questions, localS):
-    """Handle tools rendering and actions (no sidebar)."""
-    total = len(questions)
-    
-    # Render tools in main area
-    search, shuffle_clicked, reset_clicked = render_sidebar_tools(
-        total, 
-        len(st.session_state.user_answers)
-    )
-    
-    # Handle shuffle
-    if shuffle_clicked:
-        st.session_state.random_mode = True
-        random.shuffle(st.session_state.question_order)
-        st.session_state.current_index = 0
-        st.rerun()
-    
-    # Handle reset
-    if reset_clicked:
-        st.session_state.random_mode = False
-        st.session_state.question_order = list(range(total))
-        st.session_state.current_index = 0
-        st.session_state.user_answers = {}
-        st.rerun()
-    
-    return search
-
-def get_current_question_index(search, questions):
-    """Determine current question index based on search state."""
+def get_current_question_index(questions):
+    """Determine current question index."""
     indices = st.session_state.question_order
-    is_search = False
+    idx_ptr = st.session_state.current_index
+    real_idx = indices[idx_ptr]
     
-    if search:
-        indices = [
-            i for i in st.session_state.question_order 
-            if search.lower() in questions[i]['question'].lower() 
-            or search in questions[i]['id']
-        ]
-        if not indices:
-            from translations import get_text
-            lang = st.session_state.get('language', 'vi')
-            st.warning(get_text(lang, 'no_matches'))
-            st.stop()
-        
-        if 'search_query' not in st.session_state or st.session_state.search_query != search:
-            st.session_state.search_query = search
-            st.session_state.search_idx = 0
-        
-        idx_ptr = st.session_state.search_idx if st.session_state.search_idx < len(indices) else 0
-        real_idx = indices[idx_ptr]
-        is_search = True
-    else:
-        idx_ptr = st.session_state.current_index
-        real_idx = indices[idx_ptr]
-    
-    return indices, idx_ptr, real_idx, is_search
+    return indices, idx_ptr, real_idx
 
 def render_question_form(q, localS):
     """Render the question form and handle submissions."""
@@ -249,11 +187,8 @@ def main():
     render_language_selector()  # Add language selector at the top
     render_page_header()
     
-    # Handle tools (search, shuffle, reset) - render after headers
-    search = handle_tools(questions, localS)
-    
     # Get current question
-    indices, idx_ptr, real_idx, is_search = get_current_question_index(search, questions)
+    indices, idx_ptr, real_idx = get_current_question_index(questions)
     q = questions[real_idx]
     
     # Render question header
@@ -292,7 +227,8 @@ def main():
             )
     
     # Navigation
-    handle_navigation(is_search, idx_ptr, len(indices), total)
+    handle_navigation(idx_ptr, len(indices), total)
 
 if __name__ == "__main__":
     main()
+```

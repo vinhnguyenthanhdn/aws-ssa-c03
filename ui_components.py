@@ -138,7 +138,7 @@ def render_ai_theory(question_id, theory_text, auto_scroll=False):
         if auto_scroll:
             st.markdown(f'<script>scrollToElementWithRetry("theory-{question_id}");</script>', unsafe_allow_html=True)
 
-def render_navigation_buttons(idx_ptr, total, is_search, on_prev, on_next, on_jump):
+def render_navigation_buttons(idx_ptr, total, on_prev, on_next, on_jump):
     """Render navigation buttons (Previous, Jump, Next)."""
     lang = st.session_state.get('language', 'vi')
     t = lambda key: get_text(lang, key)
@@ -169,33 +169,3 @@ def render_navigation_buttons(idx_ptr, total, is_search, on_prev, on_next, on_ju
     with c3:
         if st.button(t('btn_next'), use_container_width=True):
             on_next()
-
-
-def render_sidebar_tools(total_questions, answered_count):
-    """Render tools in main area (no sidebar)."""
-    lang = st.session_state.get('language', 'vi')
-    t = lambda key: get_text(lang, key)
-    
-    # Create compact horizontal layout
-    col1, col2, col3, col4 = st.columns([3, 2, 1, 1])
-    
-    with col1:
-        # Search
-        search = st.text_input(t('search'), placeholder="Search questions...", label_visibility="collapsed")
-    
-    with col2:
-        # Progress display
-        progress_pct = int((answered_count / total_questions) * 100) if total_questions > 0 else 0
-        st.metric(label=t('done'), value=f"{answered_count}/{total_questions} ({progress_pct}%)")
-    
-    with col3:
-        # Shuffle button
-        shuffle_clicked = st.button(t('shuffle'), use_container_width=True)
-    
-    with col4:
-        # Reset button
-        reset_clicked = st.button(t('reset'), use_container_width=True)
-    
-    st.divider()
-    
-    return search, shuffle_clicked, reset_clicked
