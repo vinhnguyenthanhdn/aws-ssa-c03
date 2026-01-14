@@ -103,12 +103,12 @@ TRANSLATIONS = {
         "select_answer": "Select your answer:",
         
         # Buttons
-        "btn_theory": "📖 Theory",
-        "btn_explain": "🤖 Explain",
-        "btn_submit": "✓ Submit Answer",
+        "btn_theory": "📚 Theory",
+        "btn_explain": "💡 Explain",
+        "btn_submit": "✅ Submit",
         "btn_previous": "⬅️ Previous",
         "btn_next": "Next ➡️",
-        "btn_go": "Go",
+        "btn_go": "🚀",
         "go_to_question": "Go to Question #",
         
         # Feedback
@@ -117,13 +117,13 @@ TRANSLATIONS = {
         "no_matches": "No matches found",
         
         # AI Sections
-        "ai_analysis_title": "🤖 Analysis (AI Teacher)",
+        "ai_analysis_title": "🤖 Analysis",
         "ai_theory_title": "📖 Background Knowledge (Concepts)",
         "see_discussion": "See original discussion on ExamTopics",
         
         # Loading
         "loading_theory": "Compiling knowledge...",
-        "loading_explanation": "Analyzing question... (Gemini AI)",
+        "loading_explanation": "Analyzing question...",
         
         # Upload
         "upload_file": "Upload .md file",

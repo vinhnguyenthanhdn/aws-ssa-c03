@@ -151,8 +151,11 @@ def render_navigation_buttons(idx_ptr, total, on_prev, on_next, on_jump):
             on_prev()
             
     with c2:
-        jc1, jc2 = st.columns([2, 1])
-        with jc1:
+        # Center the input and button
+        # Using columns [3, 2, 1, 3] to create padding on sides and keep input/btn close in center
+        _, mid_input, mid_btn, _ = st.columns([3, 2, 1, 3])
+        
+        with mid_input:
             new_val = st.number_input(
                 t('go_to_question'), 
                 min_value=1, 
@@ -160,10 +163,10 @@ def render_navigation_buttons(idx_ptr, total, on_prev, on_next, on_jump):
                 value=idx_ptr+1, 
                 label_visibility="collapsed"
             )
-            if new_val != idx_ptr+1:
+            if new_val != idx_ptr + 1:
                 on_jump(new_val - 1)
                 
-        with jc2:
+        with mid_btn:
             if st.button(t('btn_go'), use_container_width=True):
                 pass  # Logic handled by number_input
                     
