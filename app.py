@@ -5,7 +5,7 @@ import json
 import time
 
 # Early Page Config for faster initial render
-st.write('<style>div.block-container{padding-top:1rem;}</style>', unsafe_allow_html=True) # Minimize top padding
+st.write('<style>div.block-container{padding-top:0rem;}</style>', unsafe_allow_html=True) # Minimize top padding
 st.set_page_config(
     page_title="AWS Certified Solutions Architect Associate (SAA-C03)", 
     page_icon="☁️", 
@@ -326,7 +326,7 @@ def main():
     # UI Render
     # Main Page Title
     st.markdown("""
-        <h1 style="text-align: center; color: #232f3e; margin-bottom: 2rem; font-size: 2.2rem;">
+        <h1 style="text-align: center; color: #232f3e; margin-top: 0; margin-bottom: 2rem; font-size: 2.2rem;">
             AWS Certified Solutions Architect Associate (SAA-C03)
         </h1>
     """, unsafe_allow_html=True)
