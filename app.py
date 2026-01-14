@@ -58,6 +58,8 @@ def init_session_state(localS):
         st.session_state.random_mode = False
     if 'question_order' not in st.session_state: 
         st.session_state.question_order = []
+    if 'active_ai_section' not in st.session_state:
+        st.session_state.active_ai_section = None  # Can be 'theory', 'explanation', or None
     
     # Initialize AI session state
     init_ai_session_state()
@@ -183,6 +185,8 @@ def render_question_form(q, localS):
             with st.spinner("Đang tổng hợp kiến thức..."):
                 opts_text = "\n".join(q['options'])
                 st.session_state.theories[q['id']] = get_ai_theory(q['question'], opts_text, q['id'])
+        # Set active section to theory, hide explanation
+        st.session_state.active_ai_section = 'theory'
     
     # Handle explanation request
     if explain_req:
@@ -191,6 +195,8 @@ def render_question_form(q, localS):
                 opts_text = "\n".join(q['options'])
                 explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'])
                 st.session_state.explanations[q['id']] = explanation
+        # Set active section to explanation, hide theory
+        st.session_state.active_ai_section = 'explanation'
     
     return theory_req, explain_req
 
@@ -245,8 +251,9 @@ def main():
         # Render auto-scroll script
         render_auto_scroll_script()
         
-        # Display AI explanation
-        if q['id'] in st.session_state.explanations:
+        # Only display one AI section at a time based on active_ai_section
+        # Display AI explanation (only if active)
+        if q['id'] in st.session_state.explanations and st.session_state.active_ai_section == 'explanation':
             render_ai_explanation(
                 q['id'],
                 st.session_state.explanations[q['id']],
@@ -254,8 +261,8 @@ def main():
                 auto_scroll=explain_req
             )
         
-        # Display AI theory
-        if q['id'] in st.session_state.theories:
+        # Display AI theory (only if active)
+        if q['id'] in st.session_state.theories and st.session_state.active_ai_section == 'theory':
             render_ai_theory(
                 q['id'],
                 st.session_state.theories[q['id']],
