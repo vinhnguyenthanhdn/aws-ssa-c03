@@ -11,7 +11,8 @@ from ai_service import init_ai_session_state, get_ai_explanation, get_ai_theory
 from ui_components import (
     render_page_header, render_question_header, render_question_card,
     render_answer_feedback, render_auto_scroll_script, render_ai_explanation,
-    render_ai_theory, render_navigation_buttons, render_language_selector
+    render_ai_theory, render_navigation_buttons, render_language_selector,
+    render_footer
 )
 from quiz_parser import parse_markdown_file
 
@@ -255,6 +256,9 @@ def main():
     
     # Navigation
     handle_navigation(idx_ptr, len(indices), total)
+    
+    # Render Footer
+    render_footer()
 
 if __name__ == "__main__":
     main()

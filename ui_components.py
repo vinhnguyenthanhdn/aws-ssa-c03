@@ -41,6 +41,26 @@ def render_page_header():
         </h1>
     """, unsafe_allow_html=True)
 
+def render_footer():
+    """Render the footer with contact information."""
+    st.divider()
+    st.markdown("""
+        <div style="text-align: center; color: #64748b; font-size: 0.875rem; padding: 1rem 0;">
+            <p style="margin-bottom: 0.5rem;">Developed by Vinh Nguyen.</p>
+            <p>Found any errors or have suggestions for improvement?<br>Please reach out: <a href="mailto:vinh.nguyenthanhdn@gmail.com">vinh.nguyenthanhdn@gmail.com</a></p>
+        </div>
+    """, unsafe_allow_html=True)
+
+def render_footer():
+    """Render the footer with contact information."""
+    st.divider()
+    st.markdown("""
+        <div style="text-align: center; color: #64748b; font-size: 0.875rem; padding: 1rem 0;">
+            <p style="margin-bottom: 0.5rem;">Developed by Vinh Nguyen.</p>
+            <p>Found any errors or have suggestions for improvement?<br>Please reach out to: <a href="mailto:vinh.nguyenthanhdn@gmail.com">vinh.nguyenthanhdn@gmail.com</a></p>
+        </div>
+    """, unsafe_allow_html=True)
+
 def render_question_header(idx_ptr, total):
     """Render question number and progress."""
     # UI always in English
