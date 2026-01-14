@@ -3,6 +3,8 @@ import json
 import time
 from pathlib import Path
 
+import os
+
 # Import custom modules
 from config import setup_page_config, inject_seo, hide_streamlit_branding, load_custom_css
 from ai_service import init_ai_session_state, get_ai_explanation, get_ai_theory
@@ -20,8 +22,8 @@ hide_streamlit_branding()
 load_custom_css()
 
 @st.cache_data
-def load_data():
-    """Handles file loading logic."""
+def load_data(mtime):
+    """Handles file loading logic. Cache invalidated if mtime changes."""
     fpath = Path(__file__).parent / "SAA_C03.md"
     if fpath.exists():
         return fpath.read_text(encoding='utf-8')
@@ -182,7 +184,9 @@ def main():
     init_session_state(localS)
     
     # Load questions
-    content = load_data()
+    fpath = Path(__file__).parent / "SAA_C03.md"
+    mtime = os.path.getmtime(fpath) if fpath.exists() else 0
+    content = load_data(mtime)
     from translations import get_text
     
     if not content:

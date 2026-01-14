@@ -401,7 +401,7 @@ C. Use Amazon Elastic Transcoder to convert the video files to more appropriate 
 
 D. Deploy an Auto Sealing group of Amazon EC2 instances in Local Zones for content delivery and caching.
 
-E. Deploy an Auto Scaling group of Amazon EC2 instances to convert the video files to more appropriate formats.
+E. Deploy an Auto Scaling group of Amazon EC2 instances to convert the video files to more appropriate formats. 
 
 **Answer: AC**
 
