@@ -148,10 +148,10 @@ def render_question_form(q, localS):
                 opts_text = "\n".join(q['options'])
                 st.session_state.theories[theory_cache_key] = get_ai_theory(q['question'], opts_text, q['id'], lang)
             
-            # Ensure minimum 1s loading time for UX consistency
+            # Ensure minimum 2s loading time for UX consistency
             elapsed = time.time() - start_time
-            if elapsed < 1.0:
-                time.sleep(1.0 - elapsed)
+            if elapsed < 2.0:
+                time.sleep(2.0 - elapsed)
                 
         # Set active section to theory, hide explanation
         st.session_state.active_ai_section = 'theory'
@@ -166,10 +166,10 @@ def render_question_form(q, localS):
                 explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'], lang)
                 st.session_state.explanations[explanation_cache_key] = explanation
             
-            # Ensure minimum 1s loading time for UX consistency
+            # Ensure minimum 2s loading time for UX consistency
             elapsed = time.time() - start_time
-            if elapsed < 1.0:
-                time.sleep(1.0 - elapsed)
+            if elapsed < 2.0:
+                time.sleep(2.0 - elapsed)
                 
         # Set active section to explanation, hide theory
         st.session_state.active_ai_section = 'explanation'
