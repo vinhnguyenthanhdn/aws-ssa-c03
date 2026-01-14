@@ -11,7 +11,7 @@ To deploy this app to Streamlit Cloud, follow these steps:
     git add .
     git commit -m "Initial commit for Quiz App"
     git push
-    ```
+    ``` 
 
 2.  **Connect to Streamlit Cloud**:
     *   Go to [share.streamlit.io](https://share.streamlit.io/).
