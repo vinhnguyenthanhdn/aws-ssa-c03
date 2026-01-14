@@ -8,7 +8,8 @@ def render_language_selector():
     languages = get_available_languages()
     
     # Create a container at the top for language selection
-    cols = st.columns([8, 1, 1])
+    # Increased button column width to prevent text wrapping
+    cols = st.columns([6, 2, 2])
     
     with cols[1]:
         # Vietnamese button
