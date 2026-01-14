@@ -44,16 +44,6 @@ def render_page_header():
 def render_footer():
     """Render the footer with contact information."""
     st.markdown("""
-        <style>
-            .block-container {
-                padding-bottom: 120px !important;
-            }
-            .fixed-footer {
-                position: fixed;
-                left: 0;
-                bottom: 0;
-                width: 100%;
-                background-color: #ffffff;
         <hr style="margin: 1.5rem 0 1rem 0; border: none; border-top: 1px solid #e2e8f0;">
         <div style="text-align: center; color: #64748b; font-size: 0.875rem; padding-bottom: 0.5rem;">
             <p style="margin-bottom: 0.5rem;">Developed by Vinh Nguyen.</p>
