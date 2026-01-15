@@ -286,38 +286,74 @@ def main():
                     creds_val = st.secrets["GDRIVE_CREDENTIALS"]
                     creds_info = json.loads(creds_val) if isinstance(creds_val, str) else dict(creds_val)
                     
-                    # Check private key
+                    # Advanced Private Key Analysis
                     pk = creds_info.get("private_key", "")
-                    if "\\n" in pk and "\n" not in pk:
-                        st.warning("⚠ Private Key contains literal '\\n', fixing...")
-                        creds_info["private_key"] = pk.replace("\\n", "\n")
+                    st.write("### 🔑 Private Key Analysis")
+                    
+                    # Normalize newlines
+                    if "\\n" in pk:
+                        pk = pk.replace("\\n", "\n")
+                    
+                    lines = pk.strip().split("\n")
+                    st.write(f"- Total Lines: {len(lines)}")
+                    
+                    has_error = False
+                    for i, line in enumerate(lines):
+                        if "PRIVATE KEY" in line: continue
+                        if len(line.strip()) == 0: continue
                         
-                    creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
-                    service = build('drive', 'v3', credentials=creds)
-                    st.success("✅ Auth Successful")
+                        # Base64 length check
+                        if len(line) % 4 == 1:
+                            st.error(f"❌ Line {i+1} corrupted: Length {len(line)} (Invalid Base64).")
+                            st.code(line)
+                            has_error = True
                     
-                    # Folder Check
-                    folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
-                    st.write(f"**Target Folder ID:** `{folder_id}`")
+                    if has_error:
+                        st.warning("🔄 Attempting Auto-Repair (cleaning headers/whitespace)...")
                     
-                    # Write Test
-                    st.write("Testing Write Permission...")
-                    import io
-                    from googleapiclient.http import MediaIoBaseUpload
+                    # Auto-Repair Strategy: Strip everything and rebuild
+                    import re
+                    clean_key = re.sub(r'-----[^-]+-----', '', pk).replace('\n', '').replace(' ', '').strip()
                     
-                    test_content = b"Connection Test: Success"
-                    fh = io.BytesIO(test_content)
-                    media = MediaIoBaseUpload(fh, mimetype='text/plain')
-                    meta = {'name': 'streamlit_debug_test.txt'}
-                    if folder_id: meta['parents'] = [folder_id]
-                    
-                    file = service.files().create(body=meta, media_body=media, fields='id').execute()
-                    file_id = file.get('id')
-                    st.success(f"✅ Write Success! File ID: `{file_id}`")
-                    
-                    # Cleanup
-                    service.files().delete(fileId=file_id).execute()
-                    st.write("Cleaned up test file.")
+                    if len(clean_key) % 4 != 0:
+                        st.error(f"❌ Critical Error: Key content length ({len(clean_key)}) is valid Base64.")
+                        st.error("👉 Please verify the key in your Secrets Dashboard. It seems characters are missing or duplicated.")
+                    else:
+                        # Reconstruct Standard PEM
+                        fixed_pem = "-----BEGIN PRIVATE KEY-----\n"
+                        for i in range(0, len(clean_key), 64):
+                            fixed_pem += clean_key[i:i+64] + "\n"
+                        fixed_pem += "-----END PRIVATE KEY-----"
+                        
+                        creds_info["private_key"] = fixed_pem
+                        
+                        # Retry Auth with Fixed Key
+                        creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
+                        service = build('drive', 'v3', credentials=creds)
+                        st.success("✅ Auth Successful using Auto-Repaired Key!")
+                        
+                        # Folder Check
+                        folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
+                        st.write(f"**Target Folder ID:** `{folder_id}`")
+                        
+                        # Write Test
+                        st.write("Testing Write Permission...")
+                        import io
+                        from googleapiclient.http import MediaIoBaseUpload
+                        
+                        test_content = b"Connection Test: Success"
+                        fh = io.BytesIO(test_content)
+                        media = MediaIoBaseUpload(fh, mimetype='text/plain')
+                        meta = {'name': 'streamlit_debug_test.txt'}
+                        if folder_id: meta['parents'] = [folder_id]
+                        
+                        file = service.files().create(body=meta, media_body=media, fields='id').execute()
+                        file_id = file.get('id')
+                        st.success(f"✅ Write Success! File ID: `{file_id}`")
+                        
+                        # Cleanup
+                        service.files().delete(fileId=file_id).execute()
+                        st.write("Cleaned up test file.")
                     
                 except Exception as e:
                     st.error(f"❌ Error: {str(e)}")
