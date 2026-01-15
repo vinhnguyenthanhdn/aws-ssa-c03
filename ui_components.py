@@ -146,7 +146,7 @@ def render_scroll_to_top():
         <script>
             (function() {{
                 var attempts = 0;
-                var maxAttempts = 5;
+                var maxAttempts = 2; // Reduced to avoid scroll lock
                 
                 function forceScrollToTop() {{
                     try {{
@@ -173,8 +173,8 @@ def render_scroll_to_top():
                             var els = parentDoc.querySelectorAll(selectors[i]);
                             for (var j = 0; j < els.length; j++) {{
                                 var el = els[j];
-                                if (el && (el.scrollTop > 0 || attempts < 2)) {{ 
-                                    // Always set 0 on early attempts, check condition on later ones
+                                if (el && (el.scrollTop > 0 || attempts < 1)) {{ 
+                                    // Only force on first attempt
                                     el.scrollTop = 0;
                                     console.log("[ScrollToTop] Scrolled " + selectors[i]);
                                     scrolled = true;
@@ -188,17 +188,16 @@ def render_scroll_to_top():
                         
                         attempts++;
                         if (attempts < maxAttempts) {{
-                            setTimeout(forceScrollToTop, 200 + (attempts * 100)); // Staggered retry
+                            setTimeout(forceScrollToTop, 150); // Quick retry only
                         }}
                         
                     }} catch (e) {{
                         console.log("[ScrollToTop] Error accessing parent: " + e);
-                        // If cross-origin blocking occurs, we can't do much, but Streamlit cloud usually allows same-origin
                     }}
                 }}
                 
                 // Execute immediately
-                setTimeout(forceScrollToTop, 100);
+                setTimeout(forceScrollToTop, 50);
             }})();
         </script>
     """, height=0, width=0)
