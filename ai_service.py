@@ -71,12 +71,16 @@ def load_cache():
     # Drive Logic
     try:
         folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
+        print(f"[DRIVE LOG] Start Load. Folder ID: {folder_id}")
+        
         base_q = f"name = '{DRIVE_FILE_NAME}' and trashed = false"
         query = f"{base_q} and '{folder_id}' in parents" if folder_id else base_q
+        print(f"[DRIVE LOG] Query: {query}")
         
         # Check for file existence
         results = service.files().list(q=query, spaces='drive', fields="files(id, name)").execute()
         files = results.get('files', [])
+        print(f"[DRIVE LOG] Found files: {files}")
         
         if not files:
             # Try searching without parent if specific folder search failed (fallback)
@@ -116,27 +120,34 @@ def save_cache(data):
 
     # Drive Logic
     try:
+        print(f"[DRIVE LOG] Start Save. Data size: {len(json_str)} bytes")
         fh = io.BytesIO(json_str.encode('utf-8'))
         media = MediaIoBaseUpload(fh, mimetype='application/json')
         
         folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
+        print(f"[DRIVE LOG] Folder ID: {folder_id}")
+        
         base_q = f"name = '{DRIVE_FILE_NAME}' and trashed = false"
         query = f"{base_q} and '{folder_id}' in parents" if folder_id else base_q
         
         # Check for file
         results = service.files().list(q=query, spaces='drive', fields="files(id)").execute()
         files = results.get('files', [])
+        print(f"[DRIVE LOG] Existing files found: {files}")
         
         if files:
             # Update existing
+            print(f"[DRIVE LOG] Updating file ID: {files[0]['id']}")
             service.files().update(fileId=files[0]['id'], media_body=media).execute()
         else:
             # Create new
+            print(f"[DRIVE LOG] Creating new file in folder: {folder_id}")
             metadata = {'name': DRIVE_FILE_NAME}
             if folder_id:
                 metadata['parents'] = [folder_id]
                 
-            service.files().create(body=metadata, media_body=media, fields='id').execute()
+            new_file = service.files().create(body=metadata, media_body=media, fields='id').execute()
+            print(f"[DRIVE LOG] Created new file ID: {new_file.get('id')}")
     except Exception as e:
         st.error(f"❌ Drive Save Error: {str(e)}")
         print(f"Drive Save Error: {e}")
