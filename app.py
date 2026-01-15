@@ -337,25 +337,57 @@ def main():
                     folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
                     st.write(f"**Target Folder ID:** `{folder_id}`")
                     
-                    # Write Test
-                    st.write("Testing Write Permission...")
-                    import io
-                    from googleapiclient.http import MediaIoBaseUpload
-                    
-                    test_content = b"Connection Test: Success"
-                    fh = io.BytesIO(test_content)
-                    media = MediaIoBaseUpload(fh, mimetype='text/plain')
-                    meta = {'name': 'streamlit_debug_test.txt'}
-                    if folder_id: meta['parents'] = [folder_id]
-                    
-                    file = service.files().create(body=meta, media_body=media, fields='id').execute()
-                    file_id = file.get('id')
-                    st.success(f"✅ Write Success! File ID: `{file_id}`")
-                    
-                    # Cleanup
-                    service.files().delete(fileId=file_id).execute()
-                    st.write("Cleaned up test file.")
-                    
+                    if not folder_id:
+                        st.error("No Folder ID provided.")
+                    else:
+                        # Check for Cache File Existence
+                        DRIVE_FILE_NAME = "aws_saa_c03_ai_cache.json"
+                        q = f"name = '{DRIVE_FILE_NAME}' and '{folder_id}' in parents and trashed = false"
+                        results = service.files().list(q=q, fields="files(id, name)").execute()
+                        files = results.get('files', [])
+                        
+                        if files:
+                            file_id = files[0]['id']
+                            st.success(f"✅ Found Cache File: `{files[0]['name']}` (ID: `{file_id}`)")
+                            
+                            # Write Test (Update)
+                            st.write("Testing Write (Update) Permission...")
+                            from googleapiclient.http import MediaIoBaseUpload
+                            import io
+                            import datetime
+                            
+                            # We just update the modification time or minimal content check
+                            # But to be safe, let's just ready it. 
+                            # Actually, let's try to read it first to preserve content, then write back?
+                            # Or just try an update with same content?
+                            # Simplest test is just checking we *can* find it. 
+                            # If we want to test write, we need to be careful not to corrupt cache.
+                            # Let's skipping actual write to avoid data loss in debug tool, 
+                            # or just try to update 'description' metadata if possible? 
+                            # Service accounts can update metadata.
+                            
+                            try:
+                                new_desc = f"Last checked by SAA-C03 App at {datetime.datetime.now()}"
+                                service.files().update(fileId=file_id, body={'description': new_desc}).execute()
+                                st.success(f"✅ Write (Metadata Update) Success!")
+                            except Exception as em:
+                                st.error(f"❌ Write Failed: {em}")
+                                
+                        else:
+                            st.warning(f"⚠ Cache file `{DRIVE_FILE_NAME}` not found in folder.")
+                            st.info(f"**Action Required:** Please create an empty file named `{DRIVE_FILE_NAME}` in your Google Drive folder manually. The Service Account cannot create new files due to quota limits, but it can edit existing ones.")
+                            
+                            # Attempt Create (Will likely fail but good for confirmation)
+                            if st.button("Attempt Force Create (Will likely fail)"):
+                                try:
+                                    test_content = b"{}"
+                                    fh = io.BytesIO(test_content)
+                                    media = MediaIoBaseUpload(fh, mimetype='application/json')
+                                    meta = {'name': DRIVE_FILE_NAME, 'parents': [folder_id]}
+                                    service.files().create(body=meta, media_body=media).execute()
+                                except Exception as e:
+                                    st.error(f"Expected Failure: {str(e)}")
+
                 except Exception as e:
                     st.error(f"❌ Error: {str(e)}")
                     import traceback
