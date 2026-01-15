@@ -261,6 +261,63 @@ def main():
     # Navigation
     handle_navigation(idx_ptr, len(indices), total)
     
+    # Navigation
+    handle_navigation(idx_ptr, len(indices), total)
+    
+    # Diagnostics
+    with st.expander("🛠 System Diagnostics (Debug)"):
+        if st.button("Test Reachability & Drive"):
+            st.write("### 1. System Info")
+            st.write(f"Streamlit Version: {st.__version__}")
+            
+            st.write("### 2. Google Drive Check")
+            try:
+                from ai_service import get_drive_service
+                service = get_drive_service()
+                
+                if not service:
+                    st.error("❌ Service Account Auth Failed (Check Secrets)")
+                else:
+                    st.success("✅ Service Account Authenticated")
+                    
+                    folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
+                    st.write(f"**Target Folder ID:** `{folder_id}`")
+                    
+                    if not folder_id:
+                        st.warning("⚠ Missing GDRIVE_FOLDER_ID - saving to Root")
+                    
+                    # Test Write
+                    import io
+                    from googleapiclient.http import MediaIoBaseUpload
+                    
+                    st.write("Testing Write Permission...")
+                    test_content = b"Connection Test: Success"
+                    fh = io.BytesIO(test_content)
+                    media = MediaIoBaseUpload(fh, mimetype='text/plain')
+                    meta = {'name': 'streamlit_debug_test.txt'}
+                    if folder_id: meta['parents'] = [folder_id]
+                    
+                    file = service.files().create(body=meta, media_body=media, fields='id').execute()
+                    file_id = file.get('id')
+                    st.success(f"✅ Write Success! File ID: `{file_id}`")
+                    
+                    # Test Read/List
+                    st.write("Testing Read/List...")
+                    q = f"'{folder_id}' in parents" if folder_id else None
+                    results = service.files().list(q=q, pageSize=5, fields="files(id, name)").execute()
+                    files = results.get('files', [])
+                    st.write(f"Found {len(files)} files in folder.")
+                    
+                    # Cleanup
+                    st.write("Cleaning up test file...")
+                    service.files().delete(fileId=file_id).execute()
+                    st.success("✅ Cleanup Success!")
+                    
+            except Exception as e:
+                st.error(f"❌ Error: {str(e)}")
+                import traceback
+                st.code(traceback.format_exc())
+
     # Render Footer
     render_footer()
 
