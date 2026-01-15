@@ -138,9 +138,37 @@ def render_scroll_to_top():
     """Scroll to the top of the page."""
     st.markdown("""
         <script>
-            var body = window.parent.document.querySelector(".main-svg") || window.parent.document.body;
-            body.scrollTop = 0;
-            window.parent.window.scrollTo(0, 0);
+            function forceScrollToTop() {
+                try {
+                    // Method 1: Window Scroll
+                    window.scrollTo(0, 0);
+                    if (window.parent) {
+                        window.parent.scrollTo(0, 0);
+                    }
+                    
+                    // Method 2: Streamlit Container Scroll
+                    // The main scrollable area in Streamlit usually has this test-id
+                    var scrollable = window.parent.document.querySelector('[data-testid="stAppViewContainer"]');
+                    if (scrollable) {
+                        scrollable.scrollTop = 0;
+                    }
+                    
+                    // Method 3: Fallback to main and body
+                    var main = window.parent.document.querySelector(".main");
+                    if (main) main.scrollTop = 0;
+                    
+                    window.parent.document.documentElement.scrollTop = 0;
+                    window.parent.document.body.scrollTop = 0;
+                    
+                } catch (e) {
+                    console.log("Scroll error: " + e);
+                }
+            }
+            
+            // Execute immediately and retry to handle rendering lag
+            forceScrollToTop();
+            setTimeout(forceScrollToTop, 50);
+            setTimeout(forceScrollToTop, 200);
         </script>
     """, unsafe_allow_html=True)
 
