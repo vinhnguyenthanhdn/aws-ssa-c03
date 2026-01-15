@@ -102,7 +102,12 @@ def get_ai_explanation(question, options, correct_answer, question_id, lang="vi"
             {t('ai_structure_4')}
             """
             response = model.generate_content(prompt)
-            text = response.text
+            
+            if response.candidates and response.candidates[0].content.parts:
+                text = response.text
+            else:
+                finish_reason = response.candidates[0].finish_reason if response.candidates else "Unknown"
+                text = f"⚠ AI trả về phản hồi rỗng (Finish Reason: {finish_reason}). Vui lòng thử lại."
             # Save to cache
             save_cached_content("explanations", cache_key, text)
             return text
@@ -148,7 +153,12 @@ def get_ai_theory(question, options, question_id, lang="vi"):
             {t('ai_theory_req_4')}
             """
             response = model.generate_content(prompt)
-            text = response.text
+            
+            if response.candidates and response.candidates[0].content.parts:
+                text = response.text
+            else:
+                finish_reason = response.candidates[0].finish_reason if response.candidates else "Unknown"
+                text = f"⚠ AI trả về phản hồi rỗng (Finish Reason: {finish_reason}). Vui lòng thử lại."
             # Save to cache
             save_cached_content("theories", cache_key, text)
             return text
