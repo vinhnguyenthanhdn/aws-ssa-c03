@@ -138,15 +138,19 @@ import streamlit.components.v1 as components
 
 def render_scroll_to_top():
     """Scroll to the top of the page using an iframe component to ensure execution."""
-    components.html("""
+    # Inject current index into HTML to make content unique and force re-render
+    scroll_id = st.session_state.get('current_index', 0)
+    
+    components.html(f"""
+        <!-- Scroll trigger for question {scroll_id} -->
         <script>
-            (function() {
+            (function() {{
                 var attempts = 0;
                 var maxAttempts = 5;
                 
-                function forceScrollToTop() {
-                    try {
-                        console.log("[ScrollToTop] Attempt " + attempts);
+                function forceScrollToTop() {{
+                    try {{
+                        console.log("[ScrollToTop] Attempt " + attempts + " for Q{scroll_id}");
                         
                         // Access parent window (Streamlit App Context)
                         var parentDoc = window.parent.document;
@@ -165,39 +169,39 @@ def render_scroll_to_top():
                         ];
                         
                         var scrolled = false;
-                        for (var i = 0; i < selectors.length; i++) {
+                        for (var i = 0; i < selectors.length; i++) {{
                             var els = parentDoc.querySelectorAll(selectors[i]);
-                            for (var j = 0; j < els.length; j++) {
+                            for (var j = 0; j < els.length; j++) {{
                                 var el = els[j];
-                                if (el && (el.scrollTop > 0 || attempts < 2)) { 
+                                if (el && (el.scrollTop > 0 || attempts < 2)) {{ 
                                     // Always set 0 on early attempts, check condition on later ones
                                     el.scrollTop = 0;
                                     console.log("[ScrollToTop] Scrolled " + selectors[i]);
                                     scrolled = true;
-                                }
-                            }
-                        }
+                                }}
+                            }}
+                        }}
                         
                         // Method 2: Fallback to document properties
                         parentDoc.documentElement.scrollTop = 0;
                         parentDoc.body.scrollTop = 0;
                         
                         attempts++;
-                        if (attempts < maxAttempts) {
+                        if (attempts < maxAttempts) {{
                             setTimeout(forceScrollToTop, 200 + (attempts * 100)); // Staggered retry
-                        }
+                        }}
                         
-                    } catch (e) {
+                    }} catch (e) {{
                         console.log("[ScrollToTop] Error accessing parent: " + e);
                         // If cross-origin blocking occurs, we can't do much, but Streamlit cloud usually allows same-origin
-                    }
-                }
+                    }}
+                }}
                 
                 // Execute immediately
                 setTimeout(forceScrollToTop, 100);
-            })();
+            }})();
         </script>
-    """, height=0, width=0, key=f"scroll_{int(st.session_state.current_index)}")
+    """, height=0, width=0)
 
 def render_ai_explanation(question_id, explanation_text, discussion_link=None, auto_scroll=False):
     """Render AI explanation section with optional auto-scroll."""
