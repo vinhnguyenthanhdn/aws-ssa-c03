@@ -146,17 +146,23 @@ def render_scroll_to_top():
                         window.parent.scrollTo(0, 0);
                     }
                     
-                    // Method 2: Streamlit Container Scroll
-                    // The main scrollable area in Streamlit usually has this test-id
-                    var scrollable = window.parent.document.querySelector('[data-testid="stAppViewContainer"]');
-                    if (scrollable) {
-                        scrollable.scrollTop = 0;
+                    // Method 2: Streamlit Container Scroll (Prioritized)
+                    var selectors = [
+                        '[data-testid="stMain"]', 
+                        '.stMain',
+                        '[data-testid="stAppViewContainer"]', 
+                        '.main',
+                        'section.main'
+                    ];
+                    
+                    for (var i = 0; i < selectors.length; i++) {
+                        var el = window.parent.document.querySelector(selectors[i]);
+                        if (el) {
+                            el.scrollTop = 0;
+                        }
                     }
                     
-                    // Method 3: Fallback to main and body
-                    var main = window.parent.document.querySelector(".main");
-                    if (main) main.scrollTop = 0;
-                    
+                    // Fallback to document properties
                     window.parent.document.documentElement.scrollTop = 0;
                     window.parent.document.body.scrollTop = 0;
                     
