@@ -197,7 +197,7 @@ def render_scroll_to_top():
                 setTimeout(forceScrollToTop, 100);
             })();
         </script>
-    """, height=0, width=0, key=f"scroll_trigger_{st.session_state.get('current_index', 0)}")
+    """, height=0, width=0, key=f"scroll_{int(st.session_state.current_index)}")
 
 def render_ai_explanation(question_id, explanation_text, discussion_link=None, auto_scroll=False):
     """Render AI explanation section with optional auto-scroll."""
