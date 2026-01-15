@@ -101,13 +101,15 @@ def get_ai_explanation(question, options, correct_answer, question_id, lang="vi"
             {t('ai_structure_3')}
             {t('ai_structure_4')}
             """
-            response = model.generate_content(prompt)
+            response = model.generate_content(prompt, stream=True)
+            text = ""
+            for chunk in response:
+                if chunk.candidates and chunk.candidates[0].content.parts:
+                    text += chunk.text
             
-            if response.candidates and response.candidates[0].content.parts:
-                text = response.text
-            else:
-                finish_reason = response.candidates[0].finish_reason if response.candidates else "Unknown"
-                text = f"⚠ AI trả về phản hồi rỗng (Finish Reason: {finish_reason}). Vui lòng thử lại."
+            if not text:
+                return "⚠ AI trả về phản hồi rỗng (Stream Mode). Vui lòng thử lại."
+
             # Save to cache
             save_cached_content("explanations", cache_key, text)
             return text
@@ -152,13 +154,15 @@ def get_ai_theory(question, options, question_id, lang="vi"):
             {t('ai_theory_req_3')}
             {t('ai_theory_req_4')}
             """
-            response = model.generate_content(prompt)
+            response = model.generate_content(prompt, stream=True)
+            text = ""
+            for chunk in response:
+                if chunk.candidates and chunk.candidates[0].content.parts:
+                    text += chunk.text
             
-            if response.candidates and response.candidates[0].content.parts:
-                text = response.text
-            else:
-                finish_reason = response.candidates[0].finish_reason if response.candidates else "Unknown"
-                text = f"⚠ AI trả về phản hồi rỗng (Finish Reason: {finish_reason}). Vui lòng thử lại."
+            if not text:
+                return "⚠ AI trả về phản hồi rỗng (Stream Mode). Vui lòng thử lại."
+
             # Save to cache
             save_cached_content("theories", cache_key, text)
             return text
