@@ -316,19 +316,20 @@ def main():
                     clean_key = re.sub(r'-----[^-]+-----', '', pk).replace('\n', '').replace(' ', '').strip()
                     
                     if len(clean_key) % 4 != 0:
-                        st.error(f"❌ Critical Error: Key content length ({len(clean_key)}) is valid Base64.")
-                        st.error("👉 Please verify the key in your Secrets Dashboard. It seems characters are missing or duplicated.")
-                    else:
-                        # Reconstruct Standard PEM
-                        fixed_pem = "-----BEGIN PRIVATE KEY-----\n"
-                        for i in range(0, len(clean_key), 64):
-                            fixed_pem += clean_key[i:i+64] + "\n"
-                        fixed_pem += "-----END PRIVATE KEY-----"
-                        
-                        creds_info["private_key"] = fixed_pem
-                        
-                        # Retry Auth with Fixed Key
-                        creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
+                        st.warning(f"Key length {len(clean_key)} requires padding. Auto-padding...")
+                        clean_key += '=' * (4 - (len(clean_key) % 4))
+                    
+                    # Reconstruct Standard PEM
+                    fixed_pem = "-----BEGIN PRIVATE KEY-----\n"
+                    for i in range(0, len(clean_key), 64):
+                        fixed_pem += clean_key[i:i+64] + "\n"
+                    fixed_pem += "-----END PRIVATE KEY-----"
+                    
+                    creds_info["private_key"] = fixed_pem
+                    st.code(fixed_pem, language="text") # Show fixed key to user
+                    
+                    # Retry Auth with Fixed Key
+                    creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
                         service = build('drive', 'v3', credentials=creds)
                         st.success("✅ Auth Successful using Auto-Repaired Key!")
                         

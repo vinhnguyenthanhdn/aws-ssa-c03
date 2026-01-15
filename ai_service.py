@@ -32,7 +32,27 @@ def get_drive_service():
         # Handle Streamlit AttrDict or JSON string
         creds_info = json.loads(creds_val) if isinstance(creds_val, str) else dict(creds_val)
         
-        creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
+        # Robust Private Key Fixer
+        pk = creds_info.get("private_key", "")
+        if pk:
+             import re
+             # Remove headers and whitespace
+             clean_core = re.sub(r'-----[^-]+-----', '', pk).replace('\n', '').replace(' ', '').strip()
+             
+             # Pad if necessary
+             missing_padding = len(clean_core) % 4
+             if missing_padding:
+                 clean_core += '=' * (4 - missing_padding)
+                              # Reconstruct Standard PEM
+                        fixed_pem = "-----BEGIN PRIVATE KEY-----\n"
+                        for i in range(0, len(clean_core), 64):
+                            fixed_pem += clean_core[i:i+64] + "\n"
+                        fixed_pem += "-----END PRIVATE KEY-----"
+                        
+                        creds_info["private_key"] = fixed_pem
+                        
+                        # Retry Auth with Fixed Key
+                        creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
         return build('drive', 'v3', credentials=creds)
     except Exception as e:
         print(f"Drive Auth Error: {e}")
