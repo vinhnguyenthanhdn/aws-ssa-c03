@@ -274,48 +274,37 @@ def main():
             has_secret = "GDRIVE_CREDENTIALS" in st.secrets
             st.write(f"- **[GDRIVE_CREDENTIALS]:** {'✅' if has_secret else '❌ (Missing in Secrets)'}")
             
-            if HAS_GDRIVE_LIB and has_secret:
+            if not HAS_GDRIVE_LIB or not has_secret:
+                st.error("Missing prerequisites. Cannot proceed.")
+            else:
                 try:
-                    service = get_drive_service()
-                    if not service:
-                        st.error("❌ Auth Failed. Attempting to debug...")
-                        # Dig deeper
-                        import json
-                        from google.oauth2.service_account import Credentials
-                        from googleapiclient.discovery import build
-                        
-                        creds_val = st.secrets["GDRIVE_CREDENTIALS"]
-                        st.write(f"Secret Type: `{type(creds_val).__name__}`")
-                        
-                        creds_info = dict(creds_val) if isinstance(creds_val, dict) else json.loads(creds_val)
-                        st.write(f"Project ID: `{creds_info.get('project_id', 'N/A')}`")
-                        
-                        # Check private key format
-                        pk = creds_info.get("private_key", "")
-                        st.write(f"Private Key Length: {len(pk)} chars")
-                        if "\\n" in pk and "\n" not in pk:
-                            st.warning("⚠ Private Key contains literal '\\n'. Replacing with actual newlines...")
-                            creds_info["private_key"] = pk.replace("\\n", "\n")
-                        
-                        creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
-                        service = build('drive', 'v3', credentials=creds)
-                        st.success("✅ Manual Auth Successful (Issues might be in ai_service.py?)")
+                    # Attempt manual auth for debugging
+                    import json
+                    from google.oauth2.service_account import Credentials
+                    from googleapiclient.discovery import build
                     
-                    if service:
-                         st.success("✅ Service Account Authenticated")
-                         # ... proceed with rest ...
-                         folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
-
+                    creds_val = st.secrets["GDRIVE_CREDENTIALS"]
+                    creds_info = dict(creds_val) if isinstance(creds_val, dict) else json.loads(creds_val)
+                    
+                    # Check private key
+                    pk = creds_info.get("private_key", "")
+                    if "\\n" in pk and "\n" not in pk:
+                        st.warning("⚠ Private Key contains literal '\\n', fixing...")
+                        creds_info["private_key"] = pk.replace("\\n", "\n")
+                        
+                    creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
+                    service = build('drive', 'v3', credentials=creds)
+                    st.success("✅ Auth Successful")
+                    
+                    # Folder Check
+                    folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
                     st.write(f"**Target Folder ID:** `{folder_id}`")
                     
-                    if not folder_id:
-                        st.warning("⚠ Missing GDRIVE_FOLDER_ID - saving to Root")
-                    
-                    # Test Write
+                    # Write Test
+                    st.write("Testing Write Permission...")
                     import io
                     from googleapiclient.http import MediaIoBaseUpload
                     
-                    st.write("Testing Write Permission...")
                     test_content = b"Connection Test: Success"
                     fh = io.BytesIO(test_content)
                     media = MediaIoBaseUpload(fh, mimetype='text/plain')
@@ -326,22 +315,14 @@ def main():
                     file_id = file.get('id')
                     st.success(f"✅ Write Success! File ID: `{file_id}`")
                     
-                    # Test Read/List
-                    st.write("Testing Read/List...")
-                    q = f"'{folder_id}' in parents" if folder_id else None
-                    results = service.files().list(q=q, pageSize=5, fields="files(id, name)").execute()
-                    files = results.get('files', [])
-                    st.write(f"Found {len(files)} files in folder.")
-                    
                     # Cleanup
-                    st.write("Cleaning up test file...")
                     service.files().delete(fileId=file_id).execute()
-                    st.success("✅ Cleanup Success!")
+                    st.write("Cleaned up test file.")
                     
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
-                import traceback
-                st.code(traceback.format_exc())
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+                    import traceback
+                    st.code(traceback.format_exc())
 
     # Render Footer
     render_footer()
