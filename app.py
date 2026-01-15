@@ -6,7 +6,7 @@ from pathlib import Path
 import os
 
 # Import custom modules
-from config import setup_page_config, inject_seo, hide_streamlit_branding, load_custom_css
+from app_config import setup_page_config, inject_seo, hide_streamlit_branding, load_custom_css
 from ai_service import init_ai_session_state, get_ai_explanation, get_ai_theory
 from ui_components import (
     render_page_header, render_question_header, render_question_card,
