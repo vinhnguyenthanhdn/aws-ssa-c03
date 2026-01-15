@@ -210,6 +210,10 @@ def main():
     render_language_selector()  # Add language selector at the top
     render_page_header()
     
+    # Check Drive Configuration
+    if "GDRIVE_FOLDER_ID" not in st.secrets:
+        st.warning("⚠️ **Lưu ý:** Bạn chưa cấu hình `GDRIVE_FOLDER_ID`. File cache đang được lưu trong bộ nhớ riêng của Bot (bạn sẽ không thấy trên Drive). Vui lòng thêm Folder ID vào Secrets.", icon="📂")
+    
     # Get current question
     indices, idx_ptr, real_idx = get_current_question_index(questions)
     q = questions[real_idx]
