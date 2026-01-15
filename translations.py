@@ -1,5 +1,7 @@
 # Language Translation System
 # This file contains all UI text translations for the app
+# Force refresh for Streamlit Cloud - 2026-01-15
+
 
 LANGUAGES = {
     "vi": {

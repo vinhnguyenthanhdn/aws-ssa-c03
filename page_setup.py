@@ -1,4 +1,6 @@
 import streamlit as st
+# Force refresh for Streamlit Cloud - 2026-01-15
+
 
 def setup_page_config():
     """Configure Streamlit page settings and SEO."""
