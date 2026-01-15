@@ -131,6 +131,17 @@ def render_auto_scroll_script():
             }, 100);
         }
         </script>
+        </script>
+    """, unsafe_allow_html=True)
+
+def render_scroll_to_top():
+    """Scroll to the top of the page."""
+    st.markdown("""
+        <script>
+            var body = window.parent.document.querySelector(".main-svg") || window.parent.document.body;
+            body.scrollTop = 0;
+            window.parent.window.scrollTo(0, 0);
+        </script>
     """, unsafe_allow_html=True)
 
 def render_ai_explanation(question_id, explanation_text, discussion_link=None, auto_scroll=False):

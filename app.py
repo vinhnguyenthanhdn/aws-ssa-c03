@@ -12,7 +12,7 @@ from ui_components import (
     render_page_header, render_question_header, render_question_card,
     render_answer_feedback, render_auto_scroll_script, render_ai_explanation,
     render_ai_theory, render_navigation_buttons, render_language_selector,
-    render_footer
+    render_footer, render_scroll_to_top
 )
 from quiz_parser import parse_markdown_file
 
@@ -64,6 +64,8 @@ def init_session_state(localS):
         st.session_state.active_ai_section = None  # Can be 'theory', 'explanation', or None
     if 'language' not in st.session_state:
         st.session_state.language = 'vi'  # Default to Vietnamese
+    if 'scroll_to_top' not in st.session_state:
+        st.session_state.scroll_to_top = False
     
     # Initialize AI session state
     init_ai_session_state()
@@ -73,17 +75,20 @@ def handle_navigation(idx_ptr, total_indices, total_questions):
     def on_prev():
         if st.session_state.current_index > 0:
             st.session_state.current_index -= 1
+            st.session_state.scroll_to_top = True
             st.query_params["q"] = str(st.session_state.current_index + 1)
             st.rerun()
     
     def on_next():
         if st.session_state.current_index < total_questions - 1:
             st.session_state.current_index += 1
+            st.session_state.scroll_to_top = True
             st.query_params["q"] = str(st.session_state.current_index + 1)
             st.rerun()
     
     def on_jump(new_idx):
         st.session_state.current_index = new_idx
+        st.session_state.scroll_to_top = True
         st.query_params["q"] = str(st.session_state.current_index + 1)
         st.rerun()
     
@@ -145,6 +150,11 @@ def main():
     # Initialize Local Storage
     localS = LocalStorage()
     init_session_state(localS)
+    
+    # Handle Scroll To Top
+    if st.session_state.get('scroll_to_top', False):
+        render_scroll_to_top()
+        st.session_state.scroll_to_top = False
     
     # Load questions
     fpath = Path(__file__).parent / "SAA_C03.md"
