@@ -52,7 +52,7 @@ def get_drive_service():
             
             creds_info["private_key"] = fixed_pem
             
-        creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
+        creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive'])
         return build('drive', 'v3', credentials=creds)
     except Exception as e:
         print(f"Drive Auth Error: {e}")

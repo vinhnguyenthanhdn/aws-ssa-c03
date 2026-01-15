@@ -329,7 +329,7 @@ def main():
                     st.code(fixed_pem, language="text") # Show fixed key to user
                     
                     # Retry Auth with Fixed Key
-                    creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
+                    creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive'])
                     service = build('drive', 'v3', credentials=creds)
                     st.success("✅ Auth Successful using Auto-Repaired Key!")
                     
