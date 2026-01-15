@@ -261,9 +261,6 @@ def main():
     # Navigation
     handle_navigation(idx_ptr, len(indices), total)
     
-    # Navigation
-    handle_navigation(idx_ptr, len(indices), total)
-    
     # Diagnostics
     with st.expander("🛠 System Diagnostics (Debug)"):
         if st.button("Test Reachability & Drive"):
