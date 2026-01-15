@@ -330,31 +330,31 @@ def main():
                     
                     # Retry Auth with Fixed Key
                     creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
-                        service = build('drive', 'v3', credentials=creds)
-                        st.success("✅ Auth Successful using Auto-Repaired Key!")
-                        
-                        # Folder Check
-                        folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
-                        st.write(f"**Target Folder ID:** `{folder_id}`")
-                        
-                        # Write Test
-                        st.write("Testing Write Permission...")
-                        import io
-                        from googleapiclient.http import MediaIoBaseUpload
-                        
-                        test_content = b"Connection Test: Success"
-                        fh = io.BytesIO(test_content)
-                        media = MediaIoBaseUpload(fh, mimetype='text/plain')
-                        meta = {'name': 'streamlit_debug_test.txt'}
-                        if folder_id: meta['parents'] = [folder_id]
-                        
-                        file = service.files().create(body=meta, media_body=media, fields='id').execute()
-                        file_id = file.get('id')
-                        st.success(f"✅ Write Success! File ID: `{file_id}`")
-                        
-                        # Cleanup
-                        service.files().delete(fileId=file_id).execute()
-                        st.write("Cleaned up test file.")
+                    service = build('drive', 'v3', credentials=creds)
+                    st.success("✅ Auth Successful using Auto-Repaired Key!")
+                    
+                    # Folder Check
+                    folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
+                    st.write(f"**Target Folder ID:** `{folder_id}`")
+                    
+                    # Write Test
+                    st.write("Testing Write Permission...")
+                    import io
+                    from googleapiclient.http import MediaIoBaseUpload
+                    
+                    test_content = b"Connection Test: Success"
+                    fh = io.BytesIO(test_content)
+                    media = MediaIoBaseUpload(fh, mimetype='text/plain')
+                    meta = {'name': 'streamlit_debug_test.txt'}
+                    if folder_id: meta['parents'] = [folder_id]
+                    
+                    file = service.files().create(body=meta, media_body=media, fields='id').execute()
+                    file_id = file.get('id')
+                    st.success(f"✅ Write Success! File ID: `{file_id}`")
+                    
+                    # Cleanup
+                    service.files().delete(fileId=file_id).execute()
+                    st.write("Cleaned up test file.")
                     
                 except Exception as e:
                     st.error(f"❌ Error: {str(e)}")
