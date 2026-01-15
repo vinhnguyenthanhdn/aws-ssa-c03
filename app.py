@@ -14,7 +14,7 @@ from ui_components import (
     render_ai_theory, render_navigation_buttons, render_language_selector,
     render_footer, render_scroll_to_top
 )
-from quiz_parser import parse_markdown_file
+from parser_service import parse_markdown_file
 
 # Setup page configuration
 setup_page_config()
