@@ -70,13 +70,23 @@ def load_cache():
     
     # Drive Logic
     try:
+        folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
+        base_q = f"name = '{DRIVE_FILE_NAME}' and trashed = false"
+        query = f"{base_q} and '{folder_id}' in parents" if folder_id else base_q
+        
         # Check for file existence
-        results = service.files().list(q=f"name = '{DRIVE_FILE_NAME}' and trashed = false", 
-                                     spaces='drive', fields="files(id, name)").execute()
+        results = service.files().list(q=query, spaces='drive', fields="files(id, name)").execute()
         files = results.get('files', [])
         
         if not files:
-            return {"explanations": {}, "theories": {}}
+            # Try searching without parent if specific folder search failed (fallback)
+            if folder_id:
+                results = service.files().list(q=base_q, spaces='drive', fields="files(id, name)").execute()
+                files = results.get('files', [])
+                if files: st.toast("⚠ Tìm thấy Cache ở thư mục gốc (không phải thư mục chỉ định).")
+            
+            if not files:
+                return {"explanations": {}, "theories": {}}
             
         # Download
         request = service.files().get_media(fileId=files[0]['id'])
@@ -89,6 +99,7 @@ def load_cache():
         fh.seek(0)
         return json.load(fh)
     except Exception as e:
+        st.error(f"❌ Drive Load Error: {str(e)}")
         print(f"Drive Load Error: {e}")
         return {"explanations": {}, "theories": {}}
 
@@ -108,9 +119,12 @@ def save_cache(data):
         fh = io.BytesIO(json_str.encode('utf-8'))
         media = MediaIoBaseUpload(fh, mimetype='application/json')
         
+        folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
+        base_q = f"name = '{DRIVE_FILE_NAME}' and trashed = false"
+        query = f"{base_q} and '{folder_id}' in parents" if folder_id else base_q
+        
         # Check for file
-        results = service.files().list(q=f"name = '{DRIVE_FILE_NAME}' and trashed = false", 
-                                     spaces='drive', fields="files(id)").execute()
+        results = service.files().list(q=query, spaces='drive', fields="files(id)").execute()
         files = results.get('files', [])
         
         if files:
@@ -119,8 +133,12 @@ def save_cache(data):
         else:
             # Create new
             metadata = {'name': DRIVE_FILE_NAME}
+            if folder_id:
+                metadata['parents'] = [folder_id]
+                
             service.files().create(body=metadata, media_body=media, fields='id').execute()
     except Exception as e:
+        st.error(f"❌ Drive Save Error: {str(e)}")
         print(f"Drive Save Error: {e}")
 
 def get_cached_content(category, key):
