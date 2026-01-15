@@ -66,8 +66,6 @@ def init_session_state(localS):
         st.session_state.language = 'vi'  # Default to Vietnamese
     if 'scroll_to_top' not in st.session_state:
         st.session_state.scroll_to_top = False
-    if 'is_loading_ai' not in st.session_state:
-        st.session_state.is_loading_ai = False  # Track if AI is currently loading
     
     # Initialize AI session state
     init_ai_session_state()
@@ -197,66 +195,50 @@ def main():
     with st.container():
         render_question_card(q["question"], q['is_multiselect'])
         
-        # Only render form if not currently loading AI content
-        if not st.session_state.is_loading_ai:
-            # Render form and handle actions
-            theory_req, explain_req = render_question_form(q, localS)
-        else:
-            theory_req = False
-            explain_req = False
+        # Render form and handle actions
+        theory_req, explain_req = render_question_form(q, localS)
         
-        # Handle AI Requests (Moved from render_question_form to fix UI issues)
-        if theory_req or explain_req:
-            # Determine lang for AI content
-            ai_lang = st.session_state.get('language', 'vi')
-            
-            if theory_req:
-                # Set loading flag and pending request type, then rerun to hide form
-                st.session_state.is_loading_ai = True
-                st.session_state.pending_ai_request = 'theory'
-                st.rerun()
-            
-            if explain_req:
-                # Set loading flag and pending request type, then rerun to hide form
-                st.session_state.is_loading_ai = True
-                st.session_state.pending_ai_request = 'explanation'
-                st.rerun()
-        
-        # Handle AI loading state (after rerun with is_loading_ai = True)
-        if st.session_state.is_loading_ai:
+        # Handle AI Requests - simplified approach with controlled containers
+        if theory_req:
             ai_lang = st.session_state.get('language', 'vi')
             theory_cache_key = f"{q['id']}_{ai_lang}"
-            explanation_cache_key = f"{q['id']}_{ai_lang}"
-            pending_request = st.session_state.get('pending_ai_request')
             
-            if pending_request == 'theory':
-                with st.status(get_text('en', 'loading_theory'), expanded=True) as status:
-                    start_time = time.time()
-                    if theory_cache_key not in st.session_state.theories:
+            # If not in cache, load it
+            if theory_cache_key not in st.session_state.theories:
+                # Create a placeholder for spinner to prevent duplication
+                spinner_placeholder = st.empty()
+                with spinner_placeholder.container():
+                    with st.spinner(get_text('en', 'loading_theory')):
+                        start_time = time.time()
                         opts_text = "\n".join(q['options'])
                         st.session_state.theories[theory_cache_key] = get_ai_theory(q['question'], opts_text, q['id'], ai_lang)
-                    elapsed = time.time() - start_time
-                    if elapsed < 1.0: time.sleep(1.0 - elapsed)
-                    status.update(label="✅ Done!", state="complete")
-                st.session_state.active_ai_section = 'theory'
-                
-            elif pending_request == 'explanation':
-                with st.status(get_text('en', 'loading_explanation'), expanded=True) as status:
-                    start_time = time.time()
-                    if explanation_cache_key not in st.session_state.explanations:
+                        elapsed = time.time() - start_time
+                        if elapsed < 1.0: time.sleep(1.0 - elapsed)
+                # Clear spinner placeholder
+                spinner_placeholder.empty()
+            
+            st.session_state.active_ai_section = 'theory'
+        
+        if explain_req:
+            ai_lang = st.session_state.get('language', 'vi')
+            explanation_cache_key = f"{q['id']}_{ai_lang}"
+            
+            # If not in cache, load it
+            if explanation_cache_key not in st.session_state.explanations:
+                # Create a placeholder for spinner to prevent duplication
+                spinner_placeholder = st.empty()
+                with spinner_placeholder.container():
+                    with st.spinner(get_text('en', 'loading_explanation')):
+                        start_time = time.time()
                         opts_text = "\n".join(q['options'])
                         explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'], ai_lang)
                         st.session_state.explanations[explanation_cache_key] = explanation
-                    elapsed = time.time() - start_time
-                    if elapsed < 1.0: time.sleep(1.0 - elapsed)
-                    status.update(label="✅ Done!", state="complete")
-                st.session_state.active_ai_section = 'explanation'
+                        elapsed = time.time() - start_time
+                        if elapsed < 1.0: time.sleep(1.0 - elapsed)
+                # Clear spinner placeholder
+                spinner_placeholder.empty()
             
-            # Clear loading state and pending request
-            st.session_state.is_loading_ai = False
-            st.session_state.pending_ai_request = None
-            time.sleep(0.3)  # Brief pause to show completion status
-            st.rerun()
+            st.session_state.active_ai_section = 'explanation'
         
         # Display answer feedback
         ans = st.session_state.user_answers.get(q['id'])

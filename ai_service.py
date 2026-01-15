@@ -3,6 +3,8 @@ import json
 import io
 from pathlib import Path
 from translations import get_text
+# Force refresh for Streamlit Cloud - 2026-01-15
+
 
 try:
     from google.oauth2.service_account import Credentials
