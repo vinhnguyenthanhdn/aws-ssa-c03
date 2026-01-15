@@ -136,45 +136,6 @@ def render_question_form(q, localS):
         st.session_state.user_answers[q['id']] = ans
         localS.setItem("saa_c03_user_answers", json.dumps(st.session_state.user_answers))
     
-    # Create cache keys that include language (so user can switch lang and get new content)
-    theory_cache_key = f"{q['id']}_{ai_lang}"
-    explanation_cache_key = f"{q['id']}_{ai_lang}"
-    
-    # Handle theory request
-    if theory_req:
-        with st.spinner(t('loading_theory')):
-            start_time = time.time()
-            if theory_cache_key not in st.session_state.theories:
-                # Not cached - fetch from AI
-                opts_text = "\n".join(q['options'])
-                st.session_state.theories[theory_cache_key] = get_ai_theory(q['question'], opts_text, q['id'], ai_lang)
-            
-            # Ensure minimum 2s loading time for UX consistency
-            elapsed = time.time() - start_time
-            if elapsed < 2.0:
-                time.sleep(2.0 - elapsed)
-                
-        # Set active section to theory, hide explanation
-        st.session_state.active_ai_section = 'theory'
-    
-    # Handle explanation request
-    if explain_req:
-        with st.spinner(t('loading_explanation')):
-            start_time = time.time()
-            if explanation_cache_key not in st.session_state.explanations:
-                # Not cached - fetch from AI
-                opts_text = "\n".join(q['options'])
-                explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'], ai_lang)
-                st.session_state.explanations[explanation_cache_key] = explanation
-            
-            # Ensure minimum 2s loading time for UX consistency
-            elapsed = time.time() - start_time
-            if elapsed < 2.0:
-                time.sleep(2.0 - elapsed)
-                
-        # Set active section to explanation, hide theory
-        st.session_state.active_ai_section = 'explanation'
-    
     return theory_req, explain_req
 
 def main():
@@ -226,6 +187,43 @@ def main():
         
         # Render form and handle actions
         theory_req, explain_req = render_question_form(q, localS)
+        
+        # Handle AI Requests (Moved from render_question_form to fix UI issues)
+        if theory_req or explain_req:
+            # Re-define translation helper locally if needed, or get language
+            current_lang = st.session_state.get('language', 'vi')
+            t_label = lambda k: get_text('en', k) # UI messages in English map to keys? No, keys are english.
+            # Actually get_text first arg is language code.
+            # In render_question_form it was: t = lambda key: get_text('en', key)
+            t = lambda key: get_text('en', key)
+            
+            # Determine lang for AI content
+            ai_lang = st.session_state.get('language', 'vi')
+            theory_cache_key = f"{q['id']}_{ai_lang}"
+            explanation_cache_key = f"{q['id']}_{ai_lang}"
+
+            if theory_req:
+                with st.spinner(t('loading_theory')):
+                    start_time = time.time()
+                    if theory_cache_key not in st.session_state.theories:
+                        opts_text = "\n".join(q['options'])
+                        st.session_state.theories[theory_cache_key] = get_ai_theory(q['question'], opts_text, q['id'], ai_lang)
+                    
+                    elapsed = time.time() - start_time
+                    if elapsed < 1.0: time.sleep(1.0 - elapsed) # Reduced to 1s for snappiness
+                st.session_state.active_ai_section = 'theory'
+            
+            if explain_req:
+                with st.spinner(t('loading_explanation')):
+                    start_time = time.time()
+                    if explanation_cache_key not in st.session_state.explanations:
+                        opts_text = "\n".join(q['options'])
+                        explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'], ai_lang)
+                        st.session_state.explanations[explanation_cache_key] = explanation
+                    
+                    elapsed = time.time() - start_time
+                    if elapsed < 1.0: time.sleep(1.0 - elapsed) # Reduced to 1s
+                st.session_state.active_ai_section = 'explanation'
         
         # Display answer feedback
         ans = st.session_state.user_answers.get(q['id'])
