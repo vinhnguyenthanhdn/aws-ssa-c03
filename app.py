@@ -268,16 +268,44 @@ def main():
             st.write(f"Streamlit Version: {st.__version__}")
             
             st.write("### 2. Google Drive Check")
-            try:
-                from ai_service import get_drive_service
-                service = get_drive_service()
-                
-                if not service:
-                    st.error("❌ Service Account Auth Failed (Check Secrets)")
-                else:
-                    st.success("✅ Service Account Authenticated")
+            from ai_service import get_drive_service, HAS_GDRIVE_LIB
+            
+            st.write(f"- **Libraries Installed:** {'✅' if HAS_GDRIVE_LIB else '❌ (Missing google-api-python-client/google-auth)'}")
+            has_secret = "GDRIVE_CREDENTIALS" in st.secrets
+            st.write(f"- **[GDRIVE_CREDENTIALS]:** {'✅' if has_secret else '❌ (Missing in Secrets)'}")
+            
+            if HAS_GDRIVE_LIB and has_secret:
+                try:
+                    service = get_drive_service()
+                    if not service:
+                        st.error("❌ Auth Failed. Attempting to debug...")
+                        # Dig deeper
+                        import json
+                        from google.oauth2.service_account import Credentials
+                        from googleapiclient.discovery import build
+                        
+                        creds_val = st.secrets["GDRIVE_CREDENTIALS"]
+                        st.write(f"Secret Type: `{type(creds_val).__name__}`")
+                        
+                        creds_info = dict(creds_val) if isinstance(creds_val, dict) else json.loads(creds_val)
+                        st.write(f"Project ID: `{creds_info.get('project_id', 'N/A')}`")
+                        
+                        # Check private key format
+                        pk = creds_info.get("private_key", "")
+                        st.write(f"Private Key Length: {len(pk)} chars")
+                        if "\\n" in pk and "\n" not in pk:
+                            st.warning("⚠ Private Key contains literal '\\n'. Replacing with actual newlines...")
+                            creds_info["private_key"] = pk.replace("\\n", "\n")
+                        
+                        creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
+                        service = build('drive', 'v3', credentials=creds)
+                        st.success("✅ Manual Auth Successful (Issues might be in ai_service.py?)")
                     
-                    folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
+                    if service:
+                         st.success("✅ Service Account Authenticated")
+                         # ... proceed with rest ...
+                         folder_id = st.secrets.get("GDRIVE_FOLDER_ID")
+
                     st.write(f"**Target Folder ID:** `{folder_id}`")
                     
                     if not folder_id:
