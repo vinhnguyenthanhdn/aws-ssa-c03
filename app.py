@@ -213,27 +213,37 @@ def main():
             explanation_cache_key = f"{q['id']}_{ai_lang}"
 
             if theory_req:
-                with st.spinner(t('loading_theory')):
-                    start_time = time.time()
-                    if theory_cache_key not in st.session_state.theories:
-                        opts_text = "\n".join(q['options'])
-                        st.session_state.theories[theory_cache_key] = get_ai_theory(q['question'], opts_text, q['id'], ai_lang)
-                    
-                    elapsed = time.time() - start_time
-                    if elapsed < 1.0: time.sleep(1.0 - elapsed) # Reduced to 1s for snappiness
+                # Use a container to prevent content duplication
+                loading_container = st.empty()
+                with loading_container:
+                    with st.spinner(t('loading_theory')):
+                        start_time = time.time()
+                        if theory_cache_key not in st.session_state.theories:
+                            opts_text = "\n".join(q['options'])
+                            st.session_state.theories[theory_cache_key] = get_ai_theory(q['question'], opts_text, q['id'], ai_lang)
+                        
+                        elapsed = time.time() - start_time
+                        if elapsed < 1.0: time.sleep(1.0 - elapsed) # Reduced to 1s for snappiness
+                loading_container.empty()  # Clear the spinner
                 st.session_state.active_ai_section = 'theory'
+                st.rerun()  # Rerun to show the content cleanly
             
             if explain_req:
-                with st.spinner(t('loading_explanation')):
-                    start_time = time.time()
-                    if explanation_cache_key not in st.session_state.explanations:
-                        opts_text = "\n".join(q['options'])
-                        explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'], ai_lang)
-                        st.session_state.explanations[explanation_cache_key] = explanation
-                    
-                    elapsed = time.time() - start_time
-                    if elapsed < 1.0: time.sleep(1.0 - elapsed) # Reduced to 1s
+                # Use a container to prevent content duplication
+                loading_container = st.empty()
+                with loading_container:
+                    with st.spinner(t('loading_explanation')):
+                        start_time = time.time()
+                        if explanation_cache_key not in st.session_state.explanations:
+                            opts_text = "\n".join(q['options'])
+                            explanation = get_ai_explanation(q['question'], opts_text, q['correct_answer'], q['id'], ai_lang)
+                            st.session_state.explanations[explanation_cache_key] = explanation
+                        
+                        elapsed = time.time() - start_time
+                        if elapsed < 1.0: time.sleep(1.0 - elapsed) # Reduced to 1s
+                loading_container.empty()  # Clear the spinner
                 st.session_state.active_ai_section = 'explanation'
+                st.rerun()  # Rerun to show the content cleanly
         
         # Display answer feedback
         ans = st.session_state.user_answers.get(q['id'])
