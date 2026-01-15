@@ -2,3 +2,5 @@ streamlit==1.52.2
 watchdog
 google-generativeai
 streamlit-local-storage
+google-api-python-client
+google-auth

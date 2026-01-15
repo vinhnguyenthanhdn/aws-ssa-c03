@@ -1,7 +1,16 @@
 import streamlit as st
 import json
+import io
 from pathlib import Path
 from translations import get_text
+
+try:
+    from google.oauth2.service_account import Credentials
+    from googleapiclient.discovery import build
+    from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
+    HAS_GDRIVE_LIB = True
+except ImportError:
+    HAS_GDRIVE_LIB = False
 
 # Configure Gemini Keys
 API_KEYS = []
@@ -10,7 +19,23 @@ if "GOOGLE_API_KEYS" in st.secrets:
 elif "GOOGLE_API_KEY" in st.secrets:
     API_KEYS = [st.secrets["GOOGLE_API_KEY"]]
 
-CACHE_FILE = Path(__file__).parent / "ai_cache.json"
+LOCAL_CACHE_FILE = Path(__file__).parent / "ai_cache.json"
+DRIVE_FILE_NAME = "aws_saa_c03_ai_cache.json"
+
+def get_drive_service():
+    """Authenticate and return Google Drive service."""
+    if not HAS_GDRIVE_LIB: return None
+    if "GDRIVE_CREDENTIALS" not in st.secrets: return None
+    try:
+        # Handle both dict and string format for secrets
+        creds_val = st.secrets["GDRIVE_CREDENTIALS"]
+        creds_info = dict(creds_val) if isinstance(creds_val, dict) else json.loads(creds_val)
+        
+        creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
+        return build('drive', 'v3', credentials=creds)
+    except Exception as e:
+        print(f"Drive Auth Error: {e}")
+        return None
 
 def configure_genai():
     """Configure Google Generative AI with current API key."""
@@ -34,20 +59,69 @@ def rotate_key():
     configure_genai()
 
 def load_cache():
-    """Load AI response cache from disk."""
-    if not CACHE_FILE.exists():
-        return {"explanations": {}, "theories": {}}
+    """Load AI response cache from Drive or local fallback."""
+    service = get_drive_service()
+    
+    # Fallback to local if Drive not available
+    if not service:
+        if not LOCAL_CACHE_FILE.exists(): return {"explanations": {}, "theories": {}}
+        try: return json.loads(LOCAL_CACHE_FILE.read_text(encoding='utf-8'))
+        except: return {"explanations": {}, "theories": {}}
+    
+    # Drive Logic
     try:
-        return json.loads(CACHE_FILE.read_text(encoding='utf-8'))
-    except:
+        # Check for file existence
+        results = service.files().list(q=f"name = '{DRIVE_FILE_NAME}' and trashed = false", 
+                                     spaces='drive', fields="files(id, name)").execute()
+        files = results.get('files', [])
+        
+        if not files:
+            return {"explanations": {}, "theories": {}}
+            
+        # Download
+        request = service.files().get_media(fileId=files[0]['id'])
+        fh = io.BytesIO()
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
+        while done is False:
+            status, done = downloader.next_chunk()
+            
+        fh.seek(0)
+        return json.load(fh)
+    except Exception as e:
+        print(f"Drive Load Error: {e}")
         return {"explanations": {}, "theories": {}}
 
 def save_cache(data):
-    """Save AI response cache to disk."""
+    """Save AI response cache to Drive or local fallback."""
+    service = get_drive_service()
+    json_str = json.dumps(data, ensure_ascii=False, indent=2)
+    
+    # Fallback to local
+    if not service:
+        try: LOCAL_CACHE_FILE.write_text(json_str, encoding='utf-8')
+        except: pass
+        return
+
+    # Drive Logic
     try:
-        CACHE_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+        fh = io.BytesIO(json_str.encode('utf-8'))
+        media = MediaIoBaseUpload(fh, mimetype='application/json')
+        
+        # Check for file
+        results = service.files().list(q=f"name = '{DRIVE_FILE_NAME}' and trashed = false", 
+                                     spaces='drive', fields="files(id)").execute()
+        files = results.get('files', [])
+        
+        if files:
+            # Update existing
+            service.files().update(fileId=files[0]['id'], media_body=media).execute()
+        else:
+            # Create new
+            metadata = {'name': DRIVE_FILE_NAME}
+            service.files().create(body=metadata, media_body=media, fields='id').execute()
     except Exception as e:
-        print(f"Error saving cache: {e}")
+        print(f"Drive Save Error: {e}")
 
 def get_cached_content(category, key):
     """Retrieve cached AI response."""

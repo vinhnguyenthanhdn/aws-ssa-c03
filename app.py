@@ -27,7 +27,8 @@ def load_data(mtime):
     """Handles file loading logic. Cache invalidated if mtime changes."""
     fpath = Path(__file__).parent / "SAA_C03.md"
     if fpath.exists():
-        return fpath.read_text(encoding='utf-8')
+        content = fpath.read_text(encoding='utf-8')
+        return parse_markdown_file(content)
     return None
 
 def init_session_state(localS):
@@ -187,19 +188,18 @@ def main():
     # Load questions
     fpath = Path(__file__).parent / "SAA_C03.md"
     mtime = os.path.getmtime(fpath) if fpath.exists() else 0
-    content = load_data(mtime)
+    questions = load_data(mtime)
     from translations import get_text
     
-    if not content:
+    if questions is None:
         # UI English
         st.header(get_text('en', 'settings'))
         uploaded = st.file_uploader(get_text('en', 'upload_file'), type=["md"])
         if uploaded:
             content = uploaded.getvalue().decode("utf-8")
+            questions = parse_markdown_file(content)
         else:
             st.stop()
-    
-    questions = parse_markdown_file(content)
     total = len(questions)
     
     # Init question order
