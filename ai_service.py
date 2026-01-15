@@ -29,7 +29,8 @@ def get_drive_service():
     try:
         # Handle both dict and string format for secrets
         creds_val = st.secrets["GDRIVE_CREDENTIALS"]
-        creds_info = dict(creds_val) if isinstance(creds_val, dict) else json.loads(creds_val)
+        # Handle Streamlit AttrDict or JSON string
+        creds_info = json.loads(creds_val) if isinstance(creds_val, str) else dict(creds_val)
         
         creds = Credentials.from_service_account_info(creds_info, scopes=['https://www.googleapis.com/auth/drive.file'])
         return build('drive', 'v3', credentials=creds)

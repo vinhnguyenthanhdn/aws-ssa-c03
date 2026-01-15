@@ -284,7 +284,7 @@ def main():
                     from googleapiclient.discovery import build
                     
                     creds_val = st.secrets["GDRIVE_CREDENTIALS"]
-                    creds_info = dict(creds_val) if isinstance(creds_val, dict) else json.loads(creds_val)
+                    creds_info = json.loads(creds_val) if isinstance(creds_val, str) else dict(creds_val)
                     
                     # Check private key
                     pk = creds_info.get("private_key", "")
