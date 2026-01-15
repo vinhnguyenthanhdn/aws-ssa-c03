@@ -134,49 +134,70 @@ def render_auto_scroll_script():
         </script>
     """, unsafe_allow_html=True)
 
+import streamlit.components.v1 as components
+
 def render_scroll_to_top():
-    """Scroll to the top of the page."""
-    st.markdown("""
+    """Scroll to the top of the page using an iframe component to ensure execution."""
+    components.html("""
         <script>
-            function forceScrollToTop() {
-                try {
-                    // Method 1: Window Scroll
-                    window.scrollTo(0, 0);
-                    if (window.parent) {
-                        window.parent.scrollTo(0, 0);
-                    }
-                    
-                    // Method 2: Streamlit Container Scroll (Prioritized)
-                    var selectors = [
-                        '[data-testid="stMain"]', 
-                        '.stMain',
-                        '[data-testid="stAppViewContainer"]', 
-                        '.main',
-                        'section.main'
-                    ];
-                    
-                    for (var i = 0; i < selectors.length; i++) {
-                        var el = window.parent.document.querySelector(selectors[i]);
-                        if (el) {
-                            el.scrollTop = 0;
+            (function() {
+                var attempts = 0;
+                var maxAttempts = 5;
+                
+                function forceScrollToTop() {
+                    try {
+                        console.log("[ScrollToTop] Attempt " + attempts);
+                        
+                        // Access parent window (Streamlit App Context)
+                        var parentDoc = window.parent.document;
+                        var win = window.parent;
+                        
+                        // Method 0: Direct Window Scroll
+                        win.scrollTo(0, 0);
+                        
+                        // Method 1: Target Specific Streamlit Containers
+                        var selectors = [
+                            '[data-testid="stMain"]', 
+                            '.stMain',
+                            '[data-testid="stAppViewContainer"]', 
+                            '.main',
+                            'section.main'
+                        ];
+                        
+                        var scrolled = false;
+                        for (var i = 0; i < selectors.length; i++) {
+                            var els = parentDoc.querySelectorAll(selectors[i]);
+                            for (var j = 0; j < els.length; j++) {
+                                var el = els[j];
+                                if (el && (el.scrollTop > 0 || attempts < 2)) { 
+                                    // Always set 0 on early attempts, check condition on later ones
+                                    el.scrollTop = 0;
+                                    console.log("[ScrollToTop] Scrolled " + selectors[i]);
+                                    scrolled = true;
+                                }
+                            }
                         }
+                        
+                        // Method 2: Fallback to document properties
+                        parentDoc.documentElement.scrollTop = 0;
+                        parentDoc.body.scrollTop = 0;
+                        
+                        attempts++;
+                        if (attempts < maxAttempts) {
+                            setTimeout(forceScrollToTop, 200 + (attempts * 100)); // Staggered retry
+                        }
+                        
+                    } catch (e) {
+                        console.log("[ScrollToTop] Error accessing parent: " + e);
+                        // If cross-origin blocking occurs, we can't do much, but Streamlit cloud usually allows same-origin
                     }
-                    
-                    // Fallback to document properties
-                    window.parent.document.documentElement.scrollTop = 0;
-                    window.parent.document.body.scrollTop = 0;
-                    
-                } catch (e) {
-                    console.log("Scroll error: " + e);
                 }
-            }
-            
-            // Execute immediately and retry to handle rendering lag
-            forceScrollToTop();
-            setTimeout(forceScrollToTop, 50);
-            setTimeout(forceScrollToTop, 200);
+                
+                // Execute immediately
+                setTimeout(forceScrollToTop, 100);
+            })();
         </script>
-    """, unsafe_allow_html=True)
+    """, height=0, width=0)
 
 def render_ai_explanation(question_id, explanation_text, discussion_link=None, auto_scroll=False):
     """Render AI explanation section with optional auto-scroll."""
