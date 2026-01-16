@@ -135,14 +135,12 @@ def render_question_form(q, localS, is_loading=False, loading_type=None):
         with f1:
             theory_req = st.form_submit_button(
                 theory_label, 
-                use_container_width=True,
-                disabled=(is_loading and loading_type == 'theory')
+                use_container_width=True
             )
         with f2:
             explain_req = st.form_submit_button(
                 explain_label, 
-                use_container_width=True,
-                disabled=(is_loading and loading_type == 'explanation')
+                use_container_width=True
             )
         with f3:
             sub = st.form_submit_button(t('btn_submit'), type="primary", use_container_width=True)

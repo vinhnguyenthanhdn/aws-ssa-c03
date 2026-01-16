@@ -593,27 +593,6 @@ button[data-testid="baseButton-secondaryFormSubmit"]:hover,
     box-shadow: 0 6px 20px rgba(255, 153, 0, 0.5) !important;
 }
 
-/* Disabled/Loading State for Form Buttons */
-form[data-testid="stForm"] div.stButton>button:disabled,
-button[data-testid="stBaseButton-secondaryFormSubmit"]:disabled,
-button[data-testid="baseButton-secondaryFormSubmit"]:disabled,
-[data-testid="stForm"] button:disabled,
-.stFormSubmitButton>button:disabled {
-    background: var(--slate-300) !important;
-    color: var(--slate-500) !important;
-    cursor: wait !important;
-    opacity: 0.8 !important;
-    box-shadow: none !important;
-    transform: none !important;
-}
-
-form[data-testid="stForm"] div.stButton>button:disabled:hover,
-[data-testid="stForm"] button:disabled:hover {
-    background: var(--slate-300) !important;
-    transform: none !important;
-    box-shadow: none !important;
-}
-
 /* ============================================
    TAGS & BADGES
    ============================================ */
