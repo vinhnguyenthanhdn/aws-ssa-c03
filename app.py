@@ -208,17 +208,11 @@ def main():
     is_loading = pending_request and pending_q_id == q['id']
     
     with st.container():
-        # Always show question card and form
-        render_question_card(q["question"], q['is_multiselect'])
-        
-        # Render form (always visible)
-        theory_req, explain_req = render_question_form(q, localS, is_loading=False, loading_type=None)
-        
-        # Phase 1: If loading AI content, show loading message below buttons
+        # Phase 1: If loading AI content, show ONLY loading message (prevent duplication)
         if is_loading:
             ai_lang = st.session_state.get('language', 'vi')
             
-            # Show loading message below buttons
+            # Show loading message ONLY
             if pending_request == 'theory':
                 st.info("⏳ Loading Theory...")
             elif pending_request == 'explanation':
@@ -252,8 +246,15 @@ def main():
             st.session_state.pending_ai_question_id = None
             st.rerun()
         
-        # Phase 2: Handle button clicks (only when not loading)
-        if not is_loading:
+        # Phase 2: Normal rendering (when NOT loading)
+        else:
+            # Show question card and form
+            render_question_card(q["question"], q['is_multiselect'])
+            
+            # Render form and handle actions
+            theory_req, explain_req = render_question_form(q, localS, is_loading=False, loading_type=None)
+            
+            # Handle button clicks
             if theory_req:
                 st.session_state.pending_ai_request = 'theory'
                 st.session_state.pending_ai_question_id = q['id']
@@ -264,7 +265,7 @@ def main():
                 st.session_state.pending_ai_question_id = q['id']
                 st.rerun()
             
-            # Display answer feedback (always show, even during loading)
+            # Display answer feedback
             ans = st.session_state.user_answers.get(q['id'])
             if ans:
                 render_answer_feedback(ans, q['correct_answer'])
