@@ -45,6 +45,42 @@ header[data-testid="stHeader"] {
 }
 
 /* ============================================
+   REMOVE DIMMING OVERLAY DURING LOADING
+   ============================================ */
+/* Hide the dimming overlay that appears during spinner/loading states */
+[data-testid="stStatusWidget"],
+.stSpinner>div,
+div[class*="overlayDiv"],
+div[data-testid="stChatMessageContainer"]>div[style*="opacity"],
+section.main>div[style*="filter"],
+.stApp>div[style*="filter: blur"],
+[class*="StatusWidget"],
+div[style*="backdrop-filter"] {
+    backdrop-filter: none !important;
+    filter: none !important;
+    opacity: 1 !important;
+}
+
+/* Ensure main content stays visible during loading */
+[data-testid="stAppViewContainer"],
+section[data-testid="stMain"],
+.stApp {
+    filter: none !important;
+    opacity: 1 !important;
+}
+
+/* Keep spinner visible but remove overlay effect */
+.stSpinner {
+    background: transparent !important;
+}
+
+/* Remove any dimming effects from overlays */
+div[class*="overlay"]:not(.question-card):not(.success-msg):not(.error-msg) {
+    background: transparent !important;
+    backdrop-filter: none !important;
+}
+
+/* ============================================
    ROOT VARIABLES
    ============================================ */
 :root {
