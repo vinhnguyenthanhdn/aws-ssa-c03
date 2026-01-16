@@ -208,11 +208,17 @@ def main():
     is_loading = pending_request and pending_q_id == q['id']
     
     with st.container():
-        # Phase 1: If loading AI content, show ONLY loading message (prevent duplication)
+        # Always show question card and form (CSS hides stale elements)
+        render_question_card(q["question"], q['is_multiselect'])
+        
+        # Render form (always visible)
+        theory_req, explain_req = render_question_form(q, localS, is_loading=False, loading_type=None)
+        
+        # Show loading message below buttons when loading
         if is_loading:
             ai_lang = st.session_state.get('language', 'vi')
             
-            # Show loading message ONLY
+            # Show loading message below buttons
             if pending_request == 'theory':
                 st.info("⏳ Loading Theory...")
             elif pending_request == 'explanation':
@@ -246,15 +252,8 @@ def main():
             st.session_state.pending_ai_question_id = None
             st.rerun()
         
-        # Phase 2: Normal rendering (when NOT loading)
-        else:
-            # Show question card and form
-            render_question_card(q["question"], q['is_multiselect'])
-            
-            # Render form and handle actions
-            theory_req, explain_req = render_question_form(q, localS, is_loading=False, loading_type=None)
-            
-            # Handle button clicks
+        # Handle button clicks (only when not loading)
+        if not is_loading:
             if theory_req:
                 st.session_state.pending_ai_request = 'theory'
                 st.session_state.pending_ai_question_id = q['id']
