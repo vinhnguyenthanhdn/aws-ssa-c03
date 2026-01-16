@@ -142,8 +142,11 @@ div[style*="z-index"][style*="position: fixed"] {
     transition: opacity 0s !important;
 }
 
-/* Hide stale elements to prevent duplication */
-[data-stale="true"] {
+/* Hide stale elements ONLY within forms to prevent duplication */
+/* This prevents question cards and form inputs from duplicating */
+/* But keeps navigation buttons visible */
+[data-testid="stForm"] [data-stale="true"],
+.question-card[data-stale="true"] {
     display: none !important;
 }
 

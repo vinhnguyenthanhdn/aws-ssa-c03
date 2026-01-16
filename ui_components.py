@@ -42,6 +42,27 @@ def render_page_header():
         </h1>
     """, unsafe_allow_html=True)
 
+def render_preserve_scroll():
+    """Inject JavaScript to preserve scroll position during rerun."""
+    st.markdown("""
+        <script>
+        // Save scroll position before rerun
+        window.addEventListener('beforeunload', function() {
+            sessionStorage.setItem('scrollPos', window.scrollY || window.pageYOffset);
+        });
+        
+        // Restore scroll position after rerun
+        window.addEventListener('load', function() {
+            var scrollPos = sessionStorage.getItem('scrollPos');
+            if (scrollPos) {
+                setTimeout(function() {
+                    window.scrollTo(0, parseInt(scrollPos));
+                }, 100);
+            }
+        });
+        </script>
+    """, unsafe_allow_html=True)
+
 def render_footer():
     """Render the footer with contact information."""
     st.markdown("""

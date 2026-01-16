@@ -12,7 +12,7 @@ from ui_components import (
     render_page_header, render_question_header, render_question_card,
     render_answer_feedback, render_auto_scroll_script, render_ai_explanation,
     render_ai_theory, render_navigation_buttons, render_language_selector,
-    render_footer, render_scroll_to_top
+    render_footer, render_scroll_to_top, render_preserve_scroll
 )
 from parser_service import parse_markdown_file
 
@@ -190,6 +190,7 @@ def main():
     # Render UI headers
     render_language_selector()  # Add language selector at the top
     render_page_header()
+    render_preserve_scroll()  # Preserve scroll position during rerun
     
     # Check Drive Configuration
     if "GDRIVE_FOLDER_ID" not in st.secrets:
