@@ -208,20 +208,15 @@ def main():
     is_loading = pending_request and pending_q_id == q['id']
     
     with st.container():
-        # Always render the question card
-        render_question_card(q["question"], q['is_multiselect'])
-        
-        # Render form with loading state (if applicable)
-        theory_req, explain_req = render_question_form(
-            q, 
-            localS, 
-            is_loading=is_loading, 
-            loading_type=pending_request
-        )
-        
-        # Phase 1: If loading AI content, process in background without spinner
+        # Phase 1: If loading AI content, show loading message only (prevent duplication)
         if is_loading:
             ai_lang = st.session_state.get('language', 'vi')
+            
+            # Show loading message
+            if pending_request == 'theory':
+                st.info("⏳ Loading Theory...")
+            elif pending_request == 'explanation':
+                st.info("⏳ Analyzing...")
             
             if pending_request == 'theory':
                 theory_cache_key = f"{q['id']}_{ai_lang}"
@@ -251,8 +246,14 @@ def main():
             st.session_state.pending_ai_question_id = None
             st.rerun()
         
-        # Phase 2: Handle button clicks (only when not loading)
-        if not is_loading:
+        # Phase 2: Normal rendering (when not loading)
+        else:
+            render_question_card(q["question"], q['is_multiselect'])
+            
+            # Render form and handle actions (pass False for is_loading since we're in else block)
+            theory_req, explain_req = render_question_form(q, localS, is_loading=False, loading_type=None)
+            
+            # Handle button clicks
             if theory_req:
                 st.session_state.pending_ai_request = 'theory'
                 st.session_state.pending_ai_question_id = q['id']
@@ -262,37 +263,37 @@ def main():
                 st.session_state.pending_ai_request = 'explanation'
                 st.session_state.pending_ai_question_id = q['id']
                 st.rerun()
-        
-        # Display answer feedback (always show, even during loading)
-        ans = st.session_state.user_answers.get(q['id'])
-        if ans:
-            render_answer_feedback(ans, q['correct_answer'])
-        
-        # Render auto-scroll script
-        render_auto_scroll_script()
-        
-        # Get current language for cache keys
-        lang = st.session_state.get('language', 'vi')
-        theory_cache_key = f"{q['id']}_{lang}"
-        explanation_cache_key = f"{q['id']}_{lang}"
-        
-        # Only display one AI section at a time based on active_ai_section
-        # Display AI explanation (only if active)
-        if explanation_cache_key in st.session_state.explanations and st.session_state.active_ai_section == 'explanation':
-            render_ai_explanation(
-                q['id'],
-                st.session_state.explanations[explanation_cache_key],
-                q.get('discussion_link'),
-                auto_scroll=False
-            )
-        
-        # Display AI theory (only if active)
-        if theory_cache_key in st.session_state.theories and st.session_state.active_ai_section == 'theory':
-            render_ai_theory(
-                q['id'],
-                st.session_state.theories[theory_cache_key],
-                auto_scroll=False
-            )
+            
+            # Display answer feedback (always show, even during loading)
+            ans = st.session_state.user_answers.get(q['id'])
+            if ans:
+                render_answer_feedback(ans, q['correct_answer'])
+            
+            # Render auto-scroll script
+            render_auto_scroll_script()
+            
+            # Get current language for cache keys
+            lang = st.session_state.get('language', 'vi')
+            theory_cache_key = f"{q['id']}_{lang}"
+            explanation_cache_key = f"{q['id']}_{lang}"
+            
+            # Only display one AI section at a time based on active_ai_section
+            # Display AI explanation (only if active)
+            if explanation_cache_key in st.session_state.explanations and st.session_state.active_ai_section == 'explanation':
+                render_ai_explanation(
+                    q['id'],
+                    st.session_state.explanations[explanation_cache_key],
+                    q.get('discussion_link'),
+                    auto_scroll=False
+                )
+            
+            # Display AI theory (only if active)
+            if theory_cache_key in st.session_state.theories and st.session_state.active_ai_section == 'theory':
+                render_ai_theory(
+                    q['id'],
+                    st.session_state.theories[theory_cache_key],
+                    auto_scroll=False
+                )
     
     # Navigation
     handle_navigation(idx_ptr, len(indices), total)
