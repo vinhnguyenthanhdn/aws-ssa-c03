@@ -47,38 +47,101 @@ header[data-testid="stHeader"] {
 /* ============================================
    REMOVE DIMMING OVERLAY DURING LOADING
    ============================================ */
-/* Hide the dimming overlay that appears during spinner/loading states */
-[data-testid="stStatusWidget"],
-.stSpinner>div,
-div[class*="overlayDiv"],
-div[data-testid="stChatMessageContainer"]>div[style*="opacity"],
-section.main>div[style*="filter"],
-.stApp>div[style*="filter: blur"],
-[class*="StatusWidget"],
-div[style*="backdrop-filter"] {
-    backdrop-filter: none !important;
-    filter: none !important;
-    opacity: 1 !important;
+/* AGGRESSIVELY remove ALL dimming overlays from Streamlit */
+
+/* Target the main overlay container */
+div[data-testid="stStatusWidget"],
+div[class*="StatusWidget"],
+div[class*="stStatusWidget"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
-/* Ensure main content stays visible during loading */
+/* Remove backdrop filters from Streamlit system elements only */
+.stApp>*,
+[data-testid="stAppViewContainer"]>*,
+section[data-testid="stMain"]>* {
+    backdrop-filter: none !important;
+}
+
+
+/* Target specific Streamlit spinner containers */
+.stSpinner,
+[class*="stSpinner"],
+div[class*="Spinner"] {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+.stSpinner>div,
+.stSpinner>div>div {
+    background: transparent !important;
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+}
+
+/* Force main content to stay visible and unfiltered */
 [data-testid="stAppViewContainer"],
 section[data-testid="stMain"],
-.stApp {
+.main,
+section.main,
+.stApp,
+.stApp>div,
+[class*="appview"] {
     filter: none !important;
     opacity: 1 !important;
-}
-
-/* Keep spinner visible but remove overlay effect */
-.stSpinner {
-    background: transparent !important;
-}
-
-/* Remove any dimming effects from overlays */
-div[class*="overlay"]:not(.question-card):not(.success-msg):not(.error-msg) {
-    background: transparent !important;
     backdrop-filter: none !important;
 }
+
+/* Remove any overlay divs */
+div[class*="overlay"]:not(.question-card):not(.success-msg):not(.error-msg),
+div[class*="Overlay"],
+div[style*="position: fixed"][style*="inset"],
+div[style*="backdrop"] {
+    display: none !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    pointer-events: none !important;
+}
+
+/* Prevent any element from having reduced opacity during loading */
+[data-testid="stVerticalBlock"]>div,
+[data-testid="stHorizontalBlock"]>div,
+[data-testid="element-container"],
+.element-container {
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+/* Keep forms visible during loading */
+form[data-testid="stForm"],
+[data-testid="stForm"] {
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+/* Additional aggressive rules to prevent ANY dimming */
+/* Hide any element that might be an overlay mask */
+div[style*="z-index"][style*="position: absolute"],
+div[style*="z-index"][style*="position: fixed"] {
+    background: transparent !important;
+}
+
+/* Prevent dimming on containers */
+[class*="block-container"],
+[data-testid="block-container"],
+.block-container {
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+/* Force disable any transitions that might cause dimming */
+.stApp *:not(.question-card):not(.success-msg):not(.error-msg):not(button) {
+    transition: opacity 0s !important;
+}
+
 
 /* ============================================
    ROOT VARIABLES
