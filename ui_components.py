@@ -46,20 +46,27 @@ def render_preserve_scroll():
     """Inject JavaScript to preserve scroll position during rerun."""
     st.markdown("""
         <script>
-        // Save scroll position before rerun
-        window.addEventListener('beforeunload', function() {
-            sessionStorage.setItem('scrollPos', window.scrollY || window.pageYOffset);
-        });
-        
-        // Restore scroll position after rerun
-        window.addEventListener('load', function() {
-            var scrollPos = sessionStorage.getItem('scrollPos');
-            if (scrollPos) {
+        (function() {
+            // Save scroll position continuously
+            var saveScroll = function() {
+                sessionStorage.setItem('streamlitScrollPos', window.scrollY || window.pageYOffset || 0);
+            };
+            
+            // Save on scroll
+            window.addEventListener('scroll', saveScroll, { passive: true });
+            
+            // Restore scroll position IMMEDIATELY on load
+            var scrollPos = sessionStorage.getItem('streamlitScrollPos');
+            if (scrollPos && scrollPos !== '0') {
+                // Restore immediately without delay
+                window.scrollTo(0, parseInt(scrollPos));
+                
+                // Also try again after a short delay for safety
                 setTimeout(function() {
                     window.scrollTo(0, parseInt(scrollPos));
-                }, 100);
+                }, 50);
             }
-        });
+        })();
         </script>
     """, unsafe_allow_html=True)
 

@@ -142,11 +142,19 @@ div[style*="z-index"][style*="position: fixed"] {
     transition: opacity 0s !important;
 }
 
-/* Hide stale elements ONLY within forms to prevent duplication */
-/* This prevents question cards and form inputs from duplicating */
-/* But keeps navigation buttons visible */
+/* Hide stale elements to prevent duplication - MORE AGGRESSIVE */
+/* Hide ALL stale elements within the main content area */
+[data-stale="true"] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Specific targeting for question cards and forms */
+.question-card[data-stale="true"],
 [data-testid="stForm"] [data-stale="true"],
-.question-card[data-stale="true"] {
+[data-testid="stMarkdown"] [data-stale="true"] .question-card {
     display: none !important;
 }
 
