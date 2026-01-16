@@ -1,6 +1,6 @@
 import streamlit as st
 from translations import get_text, get_available_languages
-# Force refresh for Streamlit Cloud - 2026-01-15
+# Force refresh for Streamlit Cloud - 2026-01-16 v2
 
 def render_language_selector():
     """Render language selector buttons."""
